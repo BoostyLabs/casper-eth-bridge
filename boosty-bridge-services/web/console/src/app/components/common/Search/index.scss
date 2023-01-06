@@ -1,0 +1,37 @@
+@import "@/index.scss";
+
+.search {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 6px;
+    gap: 18px;
+    width: 625px;
+    height: 61px;
+    border-radius: 4px;
+    background-color: #fff;
+    border: 1px solid $navbarButtonBorder;
+
+    &__input {
+        width: 414px;
+        height: 49px;
+        padding-left: 10px;
+        border-radius: 4px;
+        background: $transactionsHistoryInputBackgroundColor;
+        color: black;
+        outline: none;
+        border: none;
+    }
+
+    &__button {
+        padding: 16px 37px;
+        width: 177px;
+        height: 49px;
+        border-radius: 4px;
+        background-color: black;
+        color: white;
+        outline: none;
+        border: none;
+        cursor: not-allowed;
+    }
+}

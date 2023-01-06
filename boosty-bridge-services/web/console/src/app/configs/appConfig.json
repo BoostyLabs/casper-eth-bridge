@@ -1,0 +1,38 @@
+{
+    "numbers": {
+        "MINUS_FOUR_NUMBER": -4,
+        "ZERO_NUMBER": 0,
+        "ONE_NUMBER": 1,
+        "TWO_NUMBER": 2,
+        "THREE_NUMBER": 3,
+        "FOUR_NUMBER": 4,
+        "FIVE_NUMBER": 5,
+        "SIX_NUMBER": 6,
+        "TEN_NUMBER": 10,
+        "TWENRY_FOUR_NUMBER": 24,
+        "FIFTY_NUMBER": 50,
+        "ONE_HUNDRED_NUMBER": 100,
+        "FIVE_THOUSAND_NUMBER": 5000
+    },
+    "mockData": {
+        "AMOUNT": "23.754",
+        "COMMISION_LABEL": "5%",
+        "ETHERIUM_NETWORK_LABEL": "ETH",
+        "LUNA_TOKEN_LABEL": "Luna",
+        "POLYGON_NETWORK_LABEL": "POLYGON",
+        "WALLET_ADDRESS": "0x0d7dB08D75679bbE90b7B1eDfB8BE3a16897Ee77"
+    },
+    "strings": {
+        "AUTHENTICATION_MESSAGE": "Bridge Authentication Proof",
+        "CASPER_ACCOUNT_HASH_LABEL": "account-hash-",
+        "IS_WALLET_CONNECTED": "IS_WALLET_CONNECTED",
+        "CASPER_UNLOCK_ERROR_MESSAGE": "Please unlock the Signer to read key",
+        "CANCEL_CASPER_ACTION": "User Cancelled Signing",
+        "CONNECT_CASPER_ERROR": "Cannot read properties of undefined (reading 'isConnected')",
+        "USER_REJECTED_REQUEST": "User rejected the request.",
+        "metamaskErrors": {
+            "USER_DENIED_MESSAGE_SIGNATURE": "MetaMask Message Signature: User denied message signature.",
+            "USER_DENIED_TRANSACTION_SIGNATURE": "MetaMask Tx Signature: User denied transaction signature."
+        }
+    }
+}

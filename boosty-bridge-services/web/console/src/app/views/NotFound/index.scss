@@ -1,0 +1,41 @@
+@import "@/index.scss";
+
+.not-found {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    &__title {
+        margin-top: 5%;
+        font-size: 288px;
+        font-family: "Inter", sans-serif;
+        color: var(--main-bubble-background-color);
+    }
+
+    &__subtitle {
+        @include text-inter-600-22-27;
+
+        color: var(--main-bubble-background-color);
+    }
+
+    &__home {
+        width: 378px;
+        height: 52px;
+        margin-top: 2.5%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--main-bubble-background-color);
+        background-color: transparent;
+        border-radius: 5px;
+        font-size: 14px;
+        font-family: "Inter", sans-serif;
+        color: var(--main-bubble-background-color);
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: none;
+        }
+    }
+}
