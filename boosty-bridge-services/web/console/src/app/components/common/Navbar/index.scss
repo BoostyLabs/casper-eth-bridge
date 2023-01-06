@@ -1,0 +1,149 @@
+@import "@/index.scss";
+
+.navbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 2.5% auto;
+
+    &__links-wrapper {
+        position: fixed;
+        display: flex;
+        align-items: center;
+        height: 100vh;
+        width: 258px;
+        left: 0;
+        top: 0;
+        background: var(--main-navbar-button-background-color);
+        backdrop-filter: blur(10px);
+        opacity: 0.85;
+    }
+
+    &__links {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 35px;
+        width: 100%;
+        align-items: center;
+        text-decoration: none;
+        border-radius: 2px;
+
+        @include text-inter-500-12-15;
+
+        list-style-type: none;
+
+        &__item,
+        &__item-not-allowed {
+            width: 100%;
+            padding-left: 25px;
+            text-decoration: none;
+            cursor: pointer;
+
+            &__logo {
+                height: 18px;
+                width: 18px;
+            }
+
+            &__label {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 30px;
+
+                @include text-inter-500-12-15;
+
+                font-size: 14px;
+                line-height: 17px;
+                color: var(--main-label-color);
+
+                &__image {
+                    width: 20px;
+                    height: 20px;
+
+                    & path {
+                        fill: var(--main-label-color);
+                    }
+                }
+            }
+        }
+
+        &__item-not-allowed {
+            cursor: not-allowed;
+        }
+    }
+
+    &__additional {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        height: 47px;
+
+        &__button,
+        &__button-dark-mode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 14px;
+            height: 47px;
+            background: var(--main-navbar-button-background-color);
+            border: 1px solid $navbarButtonBorder;
+            border-radius: 4px;
+
+            @include text-inter-700-12-15;
+
+            color: var(--main-label-color);
+            cursor: pointer;
+
+            &__radio {
+                height: 18px;
+                width: 18px;
+                border-radius: 50%;
+                background: var(--main-label-color);
+            }
+
+            &:nth-child(1),
+            &:nth-child(2) {
+                cursor: not-allowed;
+            }
+
+            &:nth-child(3) {
+                background: var(--main-navbar-button-background-color);
+                color: var(--main-label-color);
+            }
+
+            &:nth-child(4) {
+                background: var(--main-navbar-button-background-color);
+                color: var(--main-label-color);
+            }
+        }
+
+        &__button-dark-mode {
+            padding: 4px;
+            gap: 0;
+
+            &__image-black,
+            &__image-white {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 41px;
+                border-radius: 4px;
+                background-color: black;
+            }
+
+            &__image-white {
+                background-color: white;
+
+                svg {
+
+                    path {
+                        fill: black;
+                    }
+                }
+            }
+        }
+    }
+}

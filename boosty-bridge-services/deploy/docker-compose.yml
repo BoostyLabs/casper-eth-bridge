@@ -1,0 +1,128 @@
+version: "3"
+services:
+
+  back:
+    container_name: golden-gate-gateway
+    command: /main run
+    image: ${HOST_FOR_DOCKER_IMAGE}/golden-gate-gateway-${ENVIRONMENT}:latest
+    volumes:
+      - ${PROJECT_DATA_PATH}:/app/data
+      - ${PROJECT_CONFIGS_PATH}/.env.GateWay:/configs/.gateway.env
+    ports:
+      - 8088:8088
+    restart: unless-stopped
+    depends_on:
+      - golden-gate-db
+    networks:
+      - fullstack
+
+  front:
+    container_name: golden-gate-web-app
+    image: ${HOST_FOR_DOCKER_IMAGE}/golden-gate-web-app-${ENVIRONMENT}:latest
+    command: >
+      sh -c "/main run
+      && cd web/console
+      && npm ci && npm run build"
+    volumes:
+      - ${PROJECT_CONFIGS_PATH}/.env.WebApp:/configs/.web.env
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    depends_on:
+      - golden-gate-db
+    networks:
+      - fullstack
+
+  golden-gate-signer:
+    container_name: golden-gate-signer
+    command: /main run
+    image: ${HOST_FOR_DOCKER_IMAGE}/golden-gate-signer-${ENVIRONMENT}:latest
+    volumes:
+      - ${PROJECT_CONFIGS_PATH}/.env.Signer:/configs/.signer.env
+      - ${PROJECT_CONFIGS_PATH}/.env:/configs/.env
+    ports:
+      - 8888:8888
+    restart: unless-stopped
+    depends_on:
+      - golden-gate-db-signer
+    networks:
+      - fullstack
+
+  golden-gate-connector-casper:
+    container_name: connector-casper
+    command: /main run
+    image: ${HOST_FOR_DOCKER_IMAGE}/golden-gate-connector-casper-${ENVIRONMENT}:latest
+    volumes:
+      - ${PROJECT_CONFIGS_PATH}/.env.ConnectorCasper:/configs/.casper.env
+      - ${PROJECT_CONFIGS_PATH}/.env:/configs/.env
+    ports:
+      - 6666:6666
+    restart: unless-stopped
+    depends_on:
+      - golden-gate-db
+    networks:
+      - fullstack
+
+  golden-gate-connector-eth:
+    container_name: connector-eth
+    command: /main run
+    image: ${HOST_FOR_DOCKER_IMAGE}/golden-gate-connector-ethereum-${ENVIRONMENT}:latest
+    volumes:
+      - ${PROJECT_CONFIGS_PATH}/.env.ConnectorEth:/configs/.eth.env
+      - ${PROJECT_CONFIGS_PATH}/.env:/configs/.env
+    ports:
+      - 7777:7777
+    restart: unless-stopped
+    depends_on:
+      - golden-gate-db
+    networks:
+      - fullstack
+
+  golden-gate-db-signer:
+    container_name: golden-gate-db-signer
+    image: postgres:latest
+    ports:
+      - 6433:5432
+    restart: always
+    volumes:
+      - ${PROJECT_DATA_PATH}/db-signer:/var/lib/postgresql/data
+    networks:
+      - fullstack
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_SIGNER}
+      - POSTGRES_USER=${POSTGRES_USER_SIGNER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_SIGNER}
+
+  golden-gate-db:
+    container_name: golden-gate-db
+    image: postgres:latest
+    ports:
+      - 6432:5432
+    restart: always
+    volumes:
+      - ${PROJECT_DATA_PATH}/db:/var/lib/postgresql/data
+    networks:
+      - fullstack
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+  docker-logs-to-web:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 9999:8080
+    depends_on:
+      - back
+    environment:
+      - DOZZLE_NO_ANALYTICS=
+      - DOZZLE_USERNAME=
+      - DOZZLE_PASSWORD=
+      - DOZZLE_KEY=
+
+networks:
+  fullstack:
+    driver: bridge

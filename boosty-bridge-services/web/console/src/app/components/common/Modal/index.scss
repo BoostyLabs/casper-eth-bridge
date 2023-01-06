@@ -1,0 +1,37 @@
+@import "@/index.scss";
+
+.modal-window {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    backdrop-filter: blur(31px);
+
+    &__clickaway {
+        position: absolute;
+        z-index: 2;
+        inset: 0;
+    }
+
+    &__body {
+        z-index: 9;
+        box-sizing: border-box;
+        border: 1px solid #c0c0c0;
+        border-radius: 14px;
+    }
+
+    &__content {
+        display: flex;
+        flex-direction: column;
+        padding: 36px 48px;
+        background: var(--main-navbar-button-background-color);
+    }
+}
