@@ -1,0 +1,34 @@
+[package]
+name = "contract-bridge"
+version = "0.1.0"
+edition = "2018"
+
+[features]
+default = ["std"]
+std = ["thiserror", "contract-util/std"]
+onchain = ["contract-util/onchain"]
+
+[dependencies]
+casper-contract = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", rev = "06ad2300310587186f16bc4acaef94efcc4fc8f7", default-features = false }
+casper-types   = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", rev = "06ad2300310587186f16bc4acaef94efcc4fc8f7" }
+contract-util = { path = "../contract-util", default-features = false }
+casper-common = { path = "../casper-common" }
+num_enum = { version = "0.5.7", default-features = false }
+
+once_cell = { version = "1.12.0", default-features = false }
+thiserror = { version = "1.0.31", optional = true }
+
+[[bin]]
+name = "bridge-contract"
+path = "src/bin/bridge-contract.rs"
+bench = false
+doctest = false
+test = false
+
+[profile.release]
+codegen-units = 1
+lto = true
+panic = "abort"
+
+[build-dependencies]
+cfg_aliases = "0.1.1"
