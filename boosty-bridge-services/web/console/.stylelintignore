@@ -1,0 +1,7 @@
+*.*
+!*.css
+!*.scss
+
+dist
+node_modules
+coverage

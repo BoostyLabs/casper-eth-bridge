@@ -1,0 +1,32 @@
+@import "@/index.scss";
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 45px 0;
+    width: 100%;
+    background: var(--main-background-color);
+    gap: 14px;
+    opacity: 0.85;
+    border-radius: 4px;
+    border: 1px solid $navbarButtonBorder;
+
+    &__title {
+        @include text-inter-600-16-20;
+
+        color: var(--main-label-color);
+    }
+
+    &__description {
+        @include text-inter-400-12-15;
+
+        color: var(--main-label-color);
+    }
+
+    &__image {
+        height: 60px;
+        width: 60px;
+    }
+}

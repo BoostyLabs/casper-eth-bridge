@@ -1,0 +1,26 @@
+@import "@static/styles/_variables.scss";
+@import "@static/styles/_mixins.scss";
+@import "@static/styles/_reset";
+@import "@static/styles/_themes.scss";
+
+body {
+    -webkit-overflow-scrolling: touch;
+    min-height: -webkit-fill-available;
+    background: var(--main-background-color);
+}
+
+html {
+    height: -webkit-fill-available;
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("@static/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("@static/fonts/Inter-Regular.woff2") format("woff2");
+    font-display: swap;
+}
