@@ -1,0 +1,38 @@
+{
+  "name": "hardhat-golden-gate",
+  "scripts": {
+    "clean": "hardhat clean",
+    "coverage": "hardhat coverage",
+    "compile": "hardhat --show-stack-traces --max-memory 8192 compile",
+    "deploy": "hardhat deploy --write true --network",
+    "deploy:mainnet": "hardhat deploy --write true --network mainnet --tags",
+    "deploy:kovan": "hardhat deploy --write true --network rinkeby --tags",
+    "deploy:bsc": "hardhat deploy --write true --network polygon --tags",
+    "lint": "solhint \"contracts/**/*.sol\"",
+    "lint:prettier": "prettier --list-different 'contracts/**/*.sol'",
+    "prettier": "prettier --write 'contracts/**/*.sol'",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@typechain/hardhat": "^6.1.2",
+    "@types/node": "^18.0.1",
+    "ethereum-waffle": "^3.4.4",
+    "hardhat": "^2.9.3",
+    "hardhat-gas-reporter": "^1.0.8",
+    "prettier": "^2.7.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "ts-node": "^10.8.2",
+    "typechain": "^8.1.0",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^3.0.1",
+    "@openzeppelin/contracts": "^4.6.0",
+    "@openzeppelin/contracts-upgradeable": "^4.7.0",
+    "@primitivefi/hardhat-dodoc": "^0.2.3",
+    "dotenv": "^16.0.1",
+    "solidity-coverage": "^0.7.21"
+  }
+}
