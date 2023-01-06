@@ -1,0 +1,133 @@
+@import "@/index.scss";
+
+.theme {
+    width: 100%;
+    max-width: 1440px;
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
+
+    &__content {
+        margin: 0 auto;
+        position: absolute;
+        z-index: 3;
+        top: 0;
+        width: 90%;
+    }
+
+    &__dividers {
+        position: absolute;
+        display: flex;
+        gap: 30px;
+        top: 50px;
+        left: 300px;
+        height: 251px;
+    }
+
+    &__divider {
+        height: 251px;
+        width: 19px;
+        background: var(--main-bubble-background-color);
+    }
+
+    &__left-balls {
+        position: absolute;
+        height: 464px;
+        width: 464px;
+        top: 240px;
+        left: 0;
+    }
+
+    &__left-ball-high {
+        position: absolute;
+        width: 464px;
+        height: 464px;
+        border-radius: 50%;
+        background: $themeProviderHighBubbleLinearBackground;
+    }
+
+    &__left-ball-medium {
+        position: absolute;
+        z-index: 2;
+        bottom: 20px;
+        left: 115px;
+        width: 235px;
+        height: 235px;
+        border-radius: 50%;
+        background: $themeProviderMediumBubbleLinearBackground;
+    }
+
+    &__left-ball-low {
+        position: absolute;
+        left: 380px;
+        top: 200px;
+        z-index: 2;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: $themeProviderLowBubbleLinearBakground;
+    }
+
+    &__right-ball-wrapper {
+        height: 596px;
+        width: 472px;
+        position: absolute;
+        overflow: hidden;
+        right: 0;
+        bottom: 140px;
+    }
+
+    &__right-ball {
+        position: absolute;
+        right: -130px;
+        width: 596px;
+        height: 596px;
+        border-radius: 50%;
+        background: $themeProviderRightBubbleLinearBackground;
+    }
+
+    &__bottom-ball-wrapper {
+        width: 416px;
+        height: 416px;
+        position: absolute;
+        overflow: hidden;
+        left: 650px;
+        bottom: 0;
+    }
+
+    &__bottom-ball-high {
+        position: absolute;
+        bottom: -200px;
+        width: 416px;
+        height: 416px;
+        border-radius: 50%;
+        background: $themeProviderBottomHighBubbleLinearBackground;
+    }
+
+    &__bottom-ball-low {
+        position: absolute;
+        bottom: 150px;
+        left: 30px;
+        width: 139px;
+        height: 139px;
+        border-radius: 50%;
+        background: $themeProviderBottomLowBubbleLinearBackground;
+    }
+
+    &__dots {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        width: 129px;
+        height: 221px;
+    }
+
+    &__dot {
+        width: 21px;
+        height: 21px;
+        border-radius: 50%;
+        background-color: var(--main-bubble-background-color);
+    }
+}

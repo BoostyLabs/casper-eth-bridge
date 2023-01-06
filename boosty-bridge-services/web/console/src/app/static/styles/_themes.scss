@@ -1,0 +1,17 @@
+.dark {
+    --main-background-color: #323232;
+    --main-bubble-background-color: #6c6c6c;
+    --main-label-color: white;
+    --main-swap-modal-linear-gradient: linear-gradient(180deg, rgb(0 0 0 / 50%) 0%, rgb(37 37 37 / 50%) 100%);
+    --main-modal-background-color: rgb(0 0 0 / 50%);
+    --main-navbar-button-background-color: linear-gradient(180deg, rgb(0 0 0 / 50%) 0%, rgb(37 37 37 / 50%) 100%);
+}
+
+.light {
+    --main-background-color: white;
+    --main-bubble-background-color: #3d3d3d;
+    --main-label-color: black;
+    --main-swap-modal-linear-gradient: linear-gradient(180deg, rgb(252 252 252 / 50%) 0%, rgb(238 238 238 / 50%) 100%);
+    --main-modal-background-color: rgb(252 252 252 / 50%);
+    --main-navbar-button-background-color: white;
+}

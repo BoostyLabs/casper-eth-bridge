@@ -1,0 +1,76 @@
+@import "@/index.scss";
+
+.paginator {
+    position: relative;
+    margin: 50px 0 50px auto;
+    width: 80%;
+
+    &__wrapper {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 10px;
+        padding: 20px 0;
+        position: relative;
+    }
+
+    &__previous,
+    &__previous-not-active,
+    &__next,
+    &__next-not-active {
+        display: flex;
+
+        &__title {
+            line-height: 24px;
+            vertical-align: middle;
+            font-size: 16px;
+            margin: 0 25px;
+        }
+
+        &__label {
+            color: var(--main-label-color);
+        }
+    }
+
+    &__previous,
+    &__next {
+        cursor: pointer;
+        color: var(--main-label-color);
+    }
+
+    &__previous-not-active,
+    &__next-not-active {
+        cursor: not-allowed;
+        color: var(--main-label-color);
+    }
+
+    &__pages {
+        display: flex;
+        flex-direction: row;
+
+        &__item,
+        &__item-active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 10px;
+            height: 30px;
+            width: 23px;
+
+            @include text-inter-600-12-15;
+
+            cursor: pointer;
+            color: var(--main-label-color);
+            list-style-type: none;
+        }
+
+        &__item-active {
+            background-color: var(--main-label-color);
+            color: var(--main-background-color);
+        }
+
+        &__dots {
+            color: var(--main-label-color);
+        }
+    }
+}

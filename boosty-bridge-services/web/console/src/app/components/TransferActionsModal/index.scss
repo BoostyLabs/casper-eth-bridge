@@ -1,0 +1,50 @@
+@import "@/index.scss";
+
+.transfer-actions {
+    position: absolute;
+    z-index: 1;
+    top: 75px;
+    right: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    border: 1px solid #c8c8c8;
+    border-radius: 4px;
+    background: white;
+
+    &__save,
+    &__copy,
+    &__cancel,
+    &__cancel-not-allowed {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        width: 106px;
+        height: 39px;
+        font-family: "Inter", sans-serif;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 15px;
+        color: #000;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        background: transparent;
+
+        &:hover {
+            background: linear-gradient(180deg, #fcfcfc 0%, #eee 100%);
+        }
+    }
+
+    &__save,
+    &__cancel-not-allowed {
+        cursor: not-allowed;
+    }
+
+    &__copy {
+        cursor: copy;
+    }
+}
