@@ -1,0 +1,27 @@
+[tokens]
+TEST = { id = 1, long_name = "Test Token" }
+
+[casper]
+id = 0
+chain_name = "casper-test"
+name = "CASPER-TESTNET"
+url = "http://65.21.134.245:7777"
+is_testnet = true
+bridge = "8153c553e8339fb87224097e4a3a2d8e4d8f49fbacee5c192e039709bc4211ba"
+private_key = "../../test_resources/casper-secret-ed25519.pem"
+
+[[casper.tokens]]
+id = 0
+address = "3c0c1847d1c410338ab9b4ee0919c181cf26085997ff9c797e8a1ae5b02ddf23"
+
+[ethereum]
+id = 1
+name = "GOERLI"
+url = "https://rpc.goerli.mudit.blog"
+is_testnet = true
+bridge = "0xB7F14E1C560Fc97b08F1327329D59F6db5FD2009"
+private_key = "../../test_resources/eth-secret-secp256k1.pem"
+
+[[ethereum.tokens]]
+id = 0
+address = "0xe5bfc49E60a62AB039189D14b148ABEb80403460"
