@@ -1,0 +1,20 @@
+alias rd := run-debug
+alias rr := run-release
+
+alias bd := build-debug
+alias br := build-release
+
+build-debug:
+    cargo build
+
+build-release:
+    cargo build --release
+
+run-debug *ARGS:
+    cargo run -q --bin cli -- {{ARGS}}
+
+run-release *ARGS:
+    cargo run -q --bin cli --release -- {{ARGS}}
+
+run-bridge *ARGS:
+    cargo run -q --bin bridge -- {{ARGS}}

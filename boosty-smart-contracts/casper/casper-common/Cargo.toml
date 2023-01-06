@@ -1,0 +1,9 @@
+[package]
+name = "casper-common"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+contract-util = { path = "../contract-util", default-features = false }
+casper-types   = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", rev = "06ad2300310587186f16bc4acaef94efcc4fc8f7" }
