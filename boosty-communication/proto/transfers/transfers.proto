@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package golden_gate;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers;pb_transfers";
+
+message StringNetworkAddress {
+    string network_name = 1;
+    string address = 2;
+}
+
+message StringTxHash {
+    string network_name = 1;
+    string hash = 2;
+}
+
+message TransferRequest {
+    StringTxHash tx_hash = 1;
+}
+
+message TransferResponse {
+    enum Status {
+        STATUS_UNSPECIFIED = 0;
+        STATUS_CONFIRMING = 1;
+        STATUS_CANCELLED = 2;
+        STATUS_FINISHED = 3;
+        STATUS_WAITING = 4;
+    }
+
+    message Transfer {
+        uint64 id = 1;
+        string amount = 2;
+        StringNetworkAddress sender = 3;
+        StringNetworkAddress recipient = 4;
+        Status status = 5;
+        StringTxHash triggering_tx = 6;
+        optional StringTxHash outbound_tx = 7;
+        google.protobuf.Timestamp created_at = 8;
+    }
+
+    repeated Transfer statuses = 1;
+}
+
+message EstimateTransferRequest {
+    string sender_network = 1;
+    string recipient_network = 2;
+    uint32 token_id = 3;
+    string amount = 4;
+}
+
+message EstimateTransferResponse {
+    string fee = 1;
+    string feePercentage = 2;
+    uint32 estimatedConfirmation = 3;
+}
+
+message TransferHistoryRequest {
+    uint64 offset = 1;
+    uint64 limit = 2;
+    bytes user_signature = 3;
+    uint32 network_id = 4;
+    // optional for ETH, mandatory for Casper
+    optional bytes public_key = 5;
+}
+
+message TransferHistoryResponse {
+    repeated TransferResponse.Transfer statuses = 1;
+    uint64 total_size = 2;
+}
+
+message BridgeInSignatureRequest {
+    StringNetworkAddress sender = 1;
+    uint32 token_id = 2;
+    string amount = 3;
+    StringNetworkAddress destination = 4;
+}
+
+message BridgeInSignatureWithNonceRequest {
+    bytes sender = 1;
+    bytes token = 2;
+    uint64 nonce = 3;
+    string amount = 4;
+    StringNetworkAddress destination = 5;
+    string gas_comission = 6;
+}
+
+message BridgeInSignatureResponse {
+    bytes token = 1;
+    string amount = 2;
+    string gas_comission = 3;
+    StringNetworkAddress destination = 4;
+    string deadline = 5;
+    uint64 nonce = 6;
+    bytes signature = 7;
+}
+
+message CancelTransferRequest {
+    uint64 transfer_id = 1;
+    bytes signature = 2;
+    uint32 network_id = 3;
+    // optional for ETH, mandatory for Casper
+    optional bytes public_key = 4;
+}
+
+message CancelTransferResponse {
+    string status = 1;
+    uint64 nonce = 2;
+    bytes signature = 3;
+    bytes token = 4;
+    bytes recipient = 5;
+    string commission = 6;
+    string amount = 7;
+}
+
+message CancelSignatureRequest {
+    uint64 nonce = 2;
+    bytes token = 4;
+    bytes recipient = 5;
+    string commission = 6;
+    string amount = 7;
+}
+
+message CancelSignatureResponse {
+    bytes signature = 1;
+}

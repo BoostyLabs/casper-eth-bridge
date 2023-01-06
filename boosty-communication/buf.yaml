@@ -1,0 +1,17 @@
+version: v1beta1
+build:
+  roots:
+    - ./proto
+lint:
+  enum_zero_value_suffix: _UNSPECIFIED
+  rpc_allow_google_protobuf_empty_requests: true
+  rpc_allow_google_protobuf_empty_responses: true
+  use:
+    - DEFAULT
+  ignore:
+    - google
+breaking:
+  use:
+    - FILE
+  ignore:
+    - google

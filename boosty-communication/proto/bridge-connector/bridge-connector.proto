@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package golden_gate;
+
+import "google/protobuf/empty.proto";
+import "connector/connector.proto";
+import "transfers/transfers.proto";
+
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-connector;pb_bridge_connector";
+
+service Connector {
+    // Return metadata of the network this connector provides.
+    rpc Metadata(google.protobuf.Empty) returns (NetworkMetadata);
+    // Return tokens known by this connector.
+    rpc KnownTokens(google.protobuf.Empty) returns (ConnectorTokens);
+    
+    // Initiate event stream from the network.
+    rpc EventStream(EventsRequest) returns (stream Event);
+    // Initiate outbound bridge transaction.
+    rpc BridgeOut(TokenOutRequest) returns (TokenOutResponse);
+    // Estimate a potential transfer.
+    rpc EstimateTransfer(EstimateTransferRequest) returns (EstimateTransferResponse);
+
+    // Return signature for user to send bridgeIn transaction.
+    rpc BridgeInSignature(BridgeInSignatureWithNonceRequest) returns (BridgeInSignatureResponse);
+    // Return signature for user to return funds.
+    rpc CancelSignature(CancelSignatureRequest) returns (CancelSignatureResponse);
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package golden_gate;
+
+import "signer/signer.proto";
+
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector-bridge;pb_connector_bridge";
+
+service ConnectorBridge {
+  // Return signed data for specific network.
+  rpc Sign(SignRequest) returns (Signature);
+
+  // Return public key for specific network.
+  rpc PublicKey(PublicKeyRequest) returns (PublicKeyResponse);
+}

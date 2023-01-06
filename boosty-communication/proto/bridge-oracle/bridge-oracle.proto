@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package golden_gate;
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge_oracle;pb_bridge_oracle";
+
+service BridgeOracle {
+    rpc PriceStream(google.protobuf.Empty) returns (stream PriceUpdate);
+}
+
+message PriceUpdate {
+    string token_name = 1;
+    string amount = 2;
+    uint32 decimals = 3;
+    google.protobuf.Timestamp last_update = 4;
+}

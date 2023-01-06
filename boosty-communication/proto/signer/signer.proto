@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package golden_gate;
+
+import "networks/networks.proto";
+
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer;pb_signer";
+
+message SignRequest {
+  NetworkType network_id = 1;
+  bytes data = 2;
+}
+
+message Signature {
+  NetworkType network_id = 1;
+  bytes signature = 2;
+}
+
+message PublicKeyRequest {
+  NetworkType network_id = 1;
+}
+
+message PublicKeyResponse {
+  bytes public_key = 1;
+}

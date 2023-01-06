@@ -1,0 +1,78 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "proto/connector-bridge/connector-bridge.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ConnectorBridge"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "golden_gateNetworkType": {
+      "type": "string",
+      "enum": [
+        "NT_EVM",
+        "NT_CASPER",
+        "NT_SOLANA"
+      ],
+      "default": "NT_EVM"
+    },
+    "golden_gatePublicKeyResponse": {
+      "type": "object",
+      "properties": {
+        "publicKey": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "golden_gateSignature": {
+      "type": "object",
+      "properties": {
+        "networkId": {
+          "$ref": "#/definitions/golden_gateNetworkType"
+        },
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

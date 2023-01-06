@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package golden_gate;
+
+import "networks/networks.proto";
+import "transfers/transfers.proto";
+
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector;pb_connector";
+
+message NetworkAddress {
+    uint32 network_id = 1;
+    bytes address = 2;
+}
+
+message Address {
+    bytes address = 1;
+}
+
+message StringAddress {
+    string address = 1;
+}
+
+message NetworkMetadata {
+    NetworkType ty = 1;
+    uint32 id = 2;
+    string name = 3;
+    string node = 4;
+    bool is_testnet = 5;
+}
+
+message EventsRequest {
+    optional uint64 block_number = 1;
+}
+
+message Event {
+    oneof variant {
+        EventFundsIn funds_in = 1;
+        EventFundsOut funds_out = 2;
+    }
+}
+
+message EventFundsIn {
+    Address from = 1;
+    StringNetworkAddress to = 2;
+    string amount = 3;
+    Address token = 4;
+    
+    TransactionInfo tx = 5;
+}
+
+message EventFundsOut {
+    Address to = 1;
+    StringNetworkAddress from = 2;
+    string amount = 3;
+    Address token = 4;
+    
+    TransactionInfo tx = 5;
+}
+
+message TransactionInfo {
+    bytes hash = 1;
+    uint64 blocknumber = 2;
+    bytes sender = 3;
+}
+
+message ConnectorTokens {
+    message ConnectorToken {
+        uint32 id = 1;
+        Address address = 2;
+    }
+    
+    repeated ConnectorToken tokens = 1;
+}
+
+message TokenOutRequest {
+    string amount = 1;
+    Address token = 2;
+    Address to = 3;
+    StringNetworkAddress from = 4;
+    uint64 transaction_id = 5;
+}
+
+message TokenOutResponse {
+    bytes txhash = 1;
+}
