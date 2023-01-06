@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches:
+      - 'master'
+
+env:
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  RUST_BACKTRACE: 1
+
+jobs:
+
+  rust-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Update local toolchain
+        run: |
+          rustup update
+          rustup install nightly
+          rustup default nightly
+          rustup component add clippy
+          rustup component add rustfmt
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+
+      - name: Toolchain info
+        run: |
+          cargo --version --verbose
+          rustc --version
+          cargo clippy --version
+          protoc --version
+
+      - name: Lint bridge-core
+        working-directory: ./poc/bridge-core
+        run: |
+          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+          cargo fmt -- --check
+          cargo clippy -- -D warnings
+
+      - name: Bridge-core tests
+        working-directory: ./poc/bridge-core
+        run: |
+          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+          cargo test --release -- --test-threads 1
+  
+      - name: Lint price-oracle
+        working-directory: ./poc/price-oracle
+        run: |
+          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+          cargo fmt -- --check
+          cargo clippy -- -D warnings
+
+#
+#     - name: Test bridge-core
+#       working-directory: ./poc/bridge-core
+#       run: |
+#         git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+#         cargo check
+#         cargo test --all
+#
+#
+#      - name: Build bridge-core
+#        working-directory: ./poc/bridge-core
+#        run: |
+#          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+#          cargo build --release

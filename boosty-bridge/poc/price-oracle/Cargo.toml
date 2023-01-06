@@ -1,0 +1,23 @@
+[package]
+name = "price-oracle"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+anyhow = "1.0"
+reqwest = { version= "0.11", features = ["json", "stream", "trust-dns"] }
+ethers = { version = "1.0.0", features = ["legacy", "abigen"] }
+tonic = "0.8"
+tonic-codegen  = { package = "tonic-codegen", path = "../../../boosty-communication/rust-gen"}
+clap = { version = "3.1", features = ["derive"] }
+primitive-types = "0.12.1"
+thiserror = "1.0"
+k256 = { version = "0.11"}
+futures = "0.3"
+prost-types = "0.11.2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3.15", features = ["env-filter"] }
+serde = "1.0"
+toml = "0.5"
