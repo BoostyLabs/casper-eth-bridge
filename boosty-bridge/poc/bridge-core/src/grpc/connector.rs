@@ -326,7 +326,7 @@ impl NetworkConnector for Connector {
         nonce: u64,
         amount: U256,
         destination: StringNetworkAddress,
-        gas_comission: U256,
+        gas_commission: U256,
     ) -> Result<tonic_codegen::BridgeInSignatureResponse, BridgeError> {
         let client = self.client.clone();
         let request = tonic_codegen::BridgeInSignatureWithNonceRequest {
@@ -335,7 +335,7 @@ impl NetworkConnector for Connector {
             nonce,
             amount: amount.to_string(),
             destination: Some(destination),
-            gas_comission: gas_comission.to_string(),
+            gas_commission: gas_commission.to_string(),
         };
 
         let response = crate::grpc::retry_request(

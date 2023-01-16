@@ -169,7 +169,8 @@ async fn init_pg() -> PgEmbed {
 pub async fn setup_tokens(db: &bridge_core::db::Database) {
     const CASPER_TEST_TOKEN: &str =
         "hash-3c0c1847d1c410338ab9b4ee0919c181cf26085997ff9c797e8a1ae5b02ddf23";
-    const EVM_TEST_TOKEN: &str = "9fF6D0788066982c95D26F4A74d6C700F3Dc29ec";
+    const EVM_TEST_TOKEN: &str = "0E26df2BaaFBC976a104EE3cccf1B467ff1b7a68";
+    const MUMBAI_TEST_TOKEN: &str = "e58be62bd3e9cee11f73e18f5111085b13c7492f";
 
     let mut tx = db.write_tx().await.expect("failed to acquire tx");
 
@@ -179,19 +180,27 @@ pub async fn setup_tokens(db: &bridge_core::db::Database) {
         .expect("failed to insert token");
 
     let casper_address = Address::new(
-        NetworkId::new(0),
+        NetworkId::new(4),
         address_from_casper_string(CASPER_TEST_TOKEN).unwrap(),
     );
 
     let evm_address = Address::new(
-        NetworkId::new(1),
+        NetworkId::new(5),
         address_from_evm_string(EVM_TEST_TOKEN).unwrap(),
     );
 
-    tx.insert_network_token(NetworkId::new(0), token_id, casper_address, 9)
+    let mumbai_address = Address::new(
+        NetworkId::new(7),
+        address_from_evm_string(MUMBAI_TEST_TOKEN).unwrap(),
+    );
+
+    tx.insert_network_token(NetworkId::new(4), token_id, casper_address, 18)
         .await
         .unwrap();
-    tx.insert_network_token(NetworkId::new(1), token_id, evm_address, 18)
+    tx.insert_network_token(NetworkId::new(5), token_id, evm_address, 18)
+        .await
+        .unwrap();
+    tx.insert_network_token(NetworkId::new(7), token_id, mumbai_address, 18)
         .await
         .unwrap();
 
