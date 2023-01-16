@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/logger"
-	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/server"
+	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/server"
 )
 
 // ensures that Server implement server.Server.

@@ -5,9 +5,9 @@ import { TransfersClient } from '@/api/transfers';
 import appConfig from '@/app/configs/appConfig.json';
 import { META_TAGS_CONFIG, parseMetaTag } from '@app/internal/parseMetaTag';
 import { ABI, ERC20_ABI, EVMProvider, JsonRPCMethods } from '@/ethers';
-import { NetworkNames } from '@/networks';
+import { NetworkNames, NetworkTypes } from '@/networks';
 import { NetworksService } from '@/networks/service';
-import { NetworkAddress, SignatureRequest } from '@/transfers';
+import { CancelSignatureRequest, NetworkAddress, SignatureRequest } from '@/transfers';
 import { TransfersService } from '@/transfers/service';
 import { Wallet } from '@/wallets';
 
@@ -105,7 +105,12 @@ export class MetaMaskWallet implements Wallet {
         const contract = await this.getContract(parseMetaTag(META_TAGS_CONFIG.ETH_BRIDGE_CONTRACT), ABI);
         const sender = new NetworkAddress(address, NetworkNames.GOERLI);
         const destination = new NetworkAddress(`account-hash-${receiver}`, NetworkNames.CASPER_TEST);
-        const supportedTokens = await networksService.supportedTokens(appConfig.numbers.ONE_NUMBER);
+        const connectedNetworks = await networksService.connected();
+        const EVMNetwork = connectedNetworks.find(network => network.type === NetworkTypes.EVM);
+        if (!EVMNetwork) {
+            return;
+        }
+        const supportedTokens = await networksService.supportedTokens(EVMNetwork.id);
         const tokenId = supportedTokens[appConfig.numbers.ZERO_NUMBER].id;
         const signatureRequest = new SignatureRequest(
             sender,
@@ -124,6 +129,23 @@ export class MetaMaskWallet implements Wallet {
             signature.nonce,
             signature.signature,
             { gasLimit: this.MAX_GAS_LIMIT },
+        );
+    };
+
+    /** Canceles transaction.
+    * @param {CancelSignatureRequest} cancelSignatureRequest - fields needed to generate signature to cancel transfer.
+    * @param {string} amount
+    */
+    public async cancelTransaction(cancelSignatureRequest: CancelSignatureRequest): Promise<void> {
+        const cancelTransferResponse = await transfersService.cancelSignature(cancelSignatureRequest);
+        const contract = await this.getContract(parseMetaTag(META_TAGS_CONFIG.ETH_BRIDGE_CONTRACT), ABI);
+        await contract.transferOut(
+            cancelTransferResponse.token,
+            cancelTransferResponse.recipient,
+            cancelTransferResponse.amount,
+            cancelTransferResponse.commission,
+            cancelTransferResponse.nonce,
+            cancelTransferResponse.signature,
         );
     };
 };

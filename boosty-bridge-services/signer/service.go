@@ -15,7 +15,6 @@ import (
 	casper_ed25519 "github.com/casper-ecosystem/casper-golang-sdk/keypair/ed25519"
 	"github.com/casper-ecosystem/casper-golang-sdk/sdk"
 	"github.com/ethereum/go-ethereum/crypto"
-	solana_types "github.com/portto/solana-go-sdk/types"
 	"github.com/zeebo/errs"
 )
 
@@ -82,13 +81,6 @@ func (s *Service) Sign(ctx context.Context, networkType networks.Type, data []by
 		deploy.SignDeploy(pair)
 
 		signature = deploy.Approvals[0].Signature.SignatureData
-	case networks.TypeSolana:
-		account, err := solana_types.AccountFromHex(privateKey)
-		if err != nil {
-			return signature, ErrSigner.Wrap(err)
-		}
-
-		signature = account.Sign(data)
 	default:
 		return signature, errors.New("wrong network type")
 	}
@@ -121,13 +113,6 @@ func (s *Service) PublicKey(ctx context.Context, networkType networks.Type) ([]b
 		}
 
 		publicKey = ed25519.PrivateKey(privateKeyHex).Public().(ed25519.PublicKey)
-	case networks.TypeSolana:
-		account, err := solana_types.AccountFromHex(privateKey)
-		if err != nil {
-			return publicKey, err
-		}
-
-		publicKey = account.PublicKey.Bytes()
 	default:
 		return publicKey, errors.New("wrong network type")
 	}

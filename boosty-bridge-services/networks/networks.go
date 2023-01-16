@@ -2,10 +2,13 @@ package networks
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 )
 
 var (
+	// ErrTransactionTypeInvalid indicates that transaction type is not valid.
+	ErrTransactionTypeInvalid = errors.New("network is not supported or its type invalid")
 	// ErrTransactionNameInvalid indicates that transaction type is not valid.
 	ErrTransactionNameInvalid = errors.New("network is not supported or its name invalid")
 )
@@ -35,13 +38,26 @@ const (
 	TypeEVM Type = "EVM"
 	// TypeCasper describes Casper network.
 	TypeCasper Type = "CASPER"
-	// TypeCasperTest describes test casper network.
-	TypeCasperTest Type = "CASPER-TEST"
-	// TypeSolana describes Solana network.
-	TypeSolana Type = "SOLANA"
-	// TypeGoerli describes Goerli network.
-	TypeGoerli Type = "GOERLI"
 )
+
+// Name defines list of possible blockchain network interoperability names.
+type Name string
+
+const (
+	// NameCasper describes Casper network name.
+	NameCasper Name = "CASPER"
+	// NameEth describes Eth network name.
+	NameEth Name = "ETH"
+	// NameCasperTest describes Casper test network name.
+	NameCasperTest Name = "CASPER-TEST"
+	// NameGoerli describes Goerli network name.
+	NameGoerli Name = "GOERLI"
+)
+
+// String converts Name type to string.
+func (n Name) String() string {
+	return string(n)
+}
 
 // TypeID defines list of possible blockchain network interoperability type ids.
 type TypeID int
@@ -51,13 +67,21 @@ const (
 	TypeIDEVM TypeID = 0
 	// TypeIDCasper describes Casper network id.
 	TypeIDCasper TypeID = 1
-	// TypeIDSolana describes Solana network id.
-	TypeIDSolana TypeID = 2
 )
 
-// Validate validates supported network name.
+// Validate validates supported network type.
 func (network Type) Validate() error {
-	if network == TypeEVM || network == TypeCasper || network == TypeCasperTest || network == TypeSolana || network == TypeGoerli {
+	if network == TypeEVM || network == TypeCasper {
+		return nil
+	}
+
+	return ErrTransactionTypeInvalid
+}
+
+// Validate validates supported network name.
+func (network Name) Validate() error {
+	if network == NameCasper || network == NameEth || network == NameCasperTest ||
+		network == NameGoerli {
 		return nil
 	}
 
@@ -68,14 +92,12 @@ func (network Type) Validate() error {
 var NetworkIDToNetworkType = map[TypeID]Type{
 	TypeIDEVM:    TypeEVM,
 	TypeIDCasper: TypeCasper,
-	TypeIDSolana: TypeSolana,
 }
 
 // NetworkTypeToNetworkID describes type-to-id ratio for network.
 var NetworkTypeToNetworkID = map[Type]TypeID{
 	TypeEVM:    TypeIDEVM,
 	TypeCasper: TypeIDCasper,
-	TypeSolana: TypeIDSolana,
 }
 
 // ID defines list of possible blockchain network interoperability ids.
@@ -86,8 +108,10 @@ const (
 	IDCasper ID = 0
 	// IDEth describes Eth network id.
 	IDEth ID = 1
-	// IDSolana describes Solana network id.
-	IDSolana ID = 2
+	// IDCasperTest describes Casper test network id.
+	IDCasperTest ID = 4
+	// IDGoerli describes Goerli network id.
+	IDGoerli ID = 5
 )
 
 // Token holds information about supported by golden-gate tokens.
@@ -108,4 +132,24 @@ type WrappedIn struct {
 type Address struct {
 	NetworkName string `json:"networkName,omitempty"`
 	Address     string `json:"address,omitempty"`
+}
+
+// StringToBytes converts signature/public key to bytes depending on the given network.
+func StringToBytes(networkID ID, signatureStr string) ([]byte, error) {
+	switch networkID {
+	case IDCasper, IDEth, IDCasperTest, IDGoerli:
+		return hex.DecodeString(signatureStr)
+	default:
+		return nil, ErrTransactionNameInvalid
+	}
+}
+
+// BytesToString converts signature/public key from bytes to string depending on the given network.
+func BytesToString(networkID ID, signatureBytes []byte) string {
+	switch networkID {
+	case IDCasper, IDEth, IDCasperTest, IDGoerli:
+		return hex.EncodeToString(signatureBytes)
+	default:
+		return ""
+	}
 }

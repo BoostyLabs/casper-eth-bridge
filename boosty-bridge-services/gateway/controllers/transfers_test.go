@@ -132,7 +132,7 @@ func TestTransfers(t *testing.T) {
 		})
 
 		t.Run("estimate transfer", func(t *testing.T) {
-			url := baseURL + "/estimate/EVM/CASPER/1/1"
+			url := baseURL + "/estimate/ETH/CASPER/1/1"
 			resp, err := apitesting.HTTPDo(ctx, url, http.MethodGet, nil)
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -145,56 +145,12 @@ func TestTransfers(t *testing.T) {
 			err = json.NewDecoder(resp.Body).Decode(&result)
 			require.NoError(t, err)
 
-			expected, err := g.transfers.Estimate(ctx, networks.TypeEVM, networks.TypeCasper, 1, "1")
+			expected, err := g.transfers.Estimate(ctx, networks.NameEth, networks.NameCasper, 1, "1")
 			require.NoError(t, err)
 
 			assert.Equal(t, expected.Fee, result.Fee)
 			assert.Equal(t, expected.FeePercentage, result.FeePercentage)
 			assert.Equal(t, expected.EstimatedConfirmationTime, result.EstimatedConfirmationTime)
-		})
-
-		t.Run("cancel transfer wrong transfer-id", func(t *testing.T) {
-			url := baseURL + "/wrong-transfer-id/wrong-sign/wrong-pubKey"
-			resp, err := apitesting.HTTPDo(ctx, url, http.MethodDelete, nil)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-			defer func() {
-				err = resp.Body.Close()
-				require.NoError(t, err)
-			}()
-		})
-
-		t.Run("cancel transfer wrong signature", func(t *testing.T) {
-			url := baseURL + "/1/wrong-sign/wrong-pubKey"
-			resp, err := apitesting.HTTPDo(ctx, url, http.MethodDelete, nil)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-			defer func() {
-				err = resp.Body.Close()
-				require.NoError(t, err)
-			}()
-		})
-
-		t.Run("cancel transfer wrong pubkey", func(t *testing.T) {
-			url := baseURL + "/1/34850b7e36e635783df0563c7202c3ac776df59db5015d2b6f0add33955bb5c43ce35efb5ce695a243bc4c5dc4298db40cd765f3ea5612d2d57da1e4933b2f201b/wrong-pubKey"
-			resp, err := apitesting.HTTPDo(ctx, url, http.MethodDelete, nil)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-			defer func() {
-				err = resp.Body.Close()
-				require.NoError(t, err)
-			}()
-		})
-
-		t.Run("cancel transfer", func(t *testing.T) {
-			url := baseURL + "/1/34850b7e36e635783df0563c7202c3ac776df59db5015d2b6f0add33955bb5c43ce35efb5ce695a243bc4c5dc4298db40cd765f3ea5612d2d57da1e4933b2f201b/34850b7e36e635783df0563c7202c3ac776df59db5015d2b6f0add33955bb5c43ce35efb5ce695a243bc4c5dc4298db40cd765f3ea5612d2d57da1e4933b2f201b"
-			resp, err := apitesting.HTTPDo(ctx, url, http.MethodDelete, nil)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, resp.StatusCode)
-			defer func() {
-				err = resp.Body.Close()
-				require.NoError(t, err)
-			}()
 		})
 
 		t.Run("transfer history offset missing", func(t *testing.T) {
@@ -315,6 +271,19 @@ func TestTransfers(t *testing.T) {
 			assert.NoError(t, err)
 
 			resp, err := apitesting.HTTPDo(ctx, url, http.MethodPost, strings.NewReader(string(body)))
+			require.NoError(t, err)
+			defer func() {
+				err = resp.Body.Close()
+				require.NoError(t, err)
+			}()
+		})
+
+		t.Run("get cancel signature", func(t *testing.T) {
+			url := baseURL + "/cancel-signature"
+			segments := "/1/1/1/1"
+			url += segments
+
+			resp, err := apitesting.HTTPDo(ctx, url, http.MethodGet, nil)
 			require.NoError(t, err)
 			defer func() {
 				err = resp.Body.Close()

@@ -13,7 +13,7 @@ import (
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/chains"
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/communication"
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/logger"
-	server "github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/server"
+	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/server"
 )
 
 // peer is the representation of a server.
