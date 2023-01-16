@@ -76,6 +76,29 @@ export class TransfersHistory {
     ) {};
 };
 
+/** Holds fields needed to generate signature to cancel transfer. */
+export class CancelSignatureRequest {
+    constructor(
+        public transferId: number = appConfig.numbers.ZERO_NUMBER,
+        public signature: string = '',
+        public networkId: number = appConfig.numbers.ZERO_NUMBER,
+        public publicKey: string = '',
+    ) {};
+};
+
+/** Holds response fields needed for sigature to cancel transfer. */
+export class CancelSignatureResponse {
+    constructor(
+        public status: string = '',
+        public nonce: number = appConfig.numbers.ZERO_NUMBER,
+        public signature: string = '',
+        public token: string = '',
+        public recipient: string = '',
+        public commission: string = '',
+        public amount: string = '',
+    ) {};
+};
+
 /** Holds information to request transfer signature. */
 export class SignatureRequest {
     constructor(

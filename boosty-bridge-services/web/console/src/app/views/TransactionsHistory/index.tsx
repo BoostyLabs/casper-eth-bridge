@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { EmptyState } from '@app/components/common/EmptyState';
@@ -9,10 +9,13 @@ import { TransferItem } from '@app/components/transactionsHistory/TransferItem';
 import appConfig from '@/app/configs/appConfig.json';
 import { LocalStorageKeys, useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { NotificationsPlugin as Notifications } from '@/app/plugins/notifications';
-import { cancelTransfer, getTransfersHistory } from '@/app/store/actions/transfers';
+import { getConnectedNetworks } from '@app/store/actions/networks';
+import { getTransfersHistory } from '@/app/store/actions/transfers';
 import { RootState } from '@/app/store';
-import { Networks } from '@/networks';
-import { Transfer, TransferPagination, TransferStatuses } from '@/transfers';
+import { Network, NetworkTypes } from '@/networks';
+import { CancelSignatureRequest, Transfer, TransferPagination, TransferStatuses } from '@/transfers';
+import { MetaMaskWallet } from '@/wallets/metamaskWallet';
+import { WalletsService } from '@/wallets/service';
 
 import './index.scss';
 
@@ -32,38 +35,52 @@ const TransactionsHistory: React.FC = () => {
     const dispatch = useDispatch();
     const { getLocalStorageItem } = useLocalStorage();
     const { transfers, totalCount } = useSelector((state: RootState) => state.transfersReducer.history);
+    const networks = useSelector((state: RootState) => state.networksReducer.networks);
     const casperSignature: string = getLocalStorageItem(LocalStorageKeys.casperSignature);
     const metamaskSignature: string = getLocalStorageItem(LocalStorageKeys.metamaskSignature);
     const casperPublicKey: string = getLocalStorageItem(LocalStorageKeys.casperPublicKey);
     const isCasperConnected = getLocalStorageItem(LocalStorageKeys.isCasperConnected);
     const isMetamaskConnected = getLocalStorageItem(LocalStorageKeys.isMetamaskConnected);
     const areBothWalletsConnected: boolean = !!(isCasperConnected && isMetamaskConnected);
-    const [activeNetwork, setActiveNetwork] = useState<Networks>(Networks.ETH);
+    const [activeNetwork, setActiveNetwork] = useState<Network>(new Network());
     const [transferPagination, setTransferPagination] = useState<TransferPagination>(
         new TransferPagination(
             metamaskSignature,
             metamaskSignature,
-            Networks.ETH,
+            activeNetwork.id,
             appConfig.numbers.ZERO_NUMBER,
             appConfig.numbers.FIVE_NUMBER
         )
     );
     const [searchedWalletAddress, setSearchedWalletAddress] = useState<string>('');
-    /** Indicates public key depends on active network. */
-    const pubKey: string = activeNetwork ? metamaskSignature : casperPublicKey;
-    /** Indicates active signature depends on active network. */
-    const activeSignature: string | null = activeNetwork ? metamaskSignature : casperSignature;
+    const metaMaskWallet: MetaMaskWallet = new MetaMaskWallet();
+    const metaMaskService = useMemo(() => new WalletsService(metaMaskWallet), []);
 
-    const getSwitchButtonClassName: (network: Networks) => string = (network) => {
+    /** Request network by type, i.e CASPER, EVM. */
+    const getNetworkByType = (searchedNetwork: NetworkTypes) => {
+        const network = networks && networks.find((network: Network) => network.type === searchedNetwork)
+        if (!network) {
+            return new Network();
+        }
+        return network;
+    };
+
+    /** Indicates public key depends on active network. */
+    const pubKey: string = getNetworkByType(NetworkTypes.EVM).type === activeNetwork.type ? metamaskSignature : casperPublicKey;
+    /** Indicates active signature depends on active network. */
+    const activeSignature: string | null = getNetworkByType(NetworkTypes.EVM).type === activeNetwork.type ? metamaskSignature : casperSignature;
+
+    const getSwitchButtonClassName: (network: NetworkTypes) => string = (network) => {
         const mainButtonClassName: string = `transactions-history__menu__switch__button${areBothWalletsConnected ? '' : '-not-allowed'}`;
-        const activeButtonClassName: string = network === activeNetwork ? 'active' : '';
+        const activeButtonClassName: string = network === activeNetwork.type ? 'active' : '';
 
         return `${mainButtonClassName} ${activeButtonClassName}`;
     };
 
     /** Changes active button depend on network. */
-    const changeActiveSwitchButton = (network: Networks) => {
-        setActiveNetwork(network);
+    const changeActiveSwitchButton = (network: NetworkTypes) => {
+        const activeNetwork = getNetworkByType(network);
+        setActiveNetwork(activeNetwork);
     };
 
     const changeOffset = (offset: number) => {
@@ -85,10 +102,20 @@ const TransactionsHistory: React.FC = () => {
     };
 
     /** Canceles transfer and closes popup. */
-    const cancelCurrentTransfer = async(id: number) => {
+    const cancelTransfer = async(transferId: number, address: string) => {
+        if (activeNetwork.type === NetworkTypes.CASPER) {
+            // TODO: implement.
+            return;
+        }
         try {
-            const signature = activeNetwork ? metamaskSignature : casperSignature;
-            await dispatch(cancelTransfer(id, signature, pubKey));
+            const signature = metamaskSignature;
+            const cancelSignatureRequest = new CancelSignatureRequest(
+                transferId,
+                signature,
+                activeNetwork.id,
+                address,
+            );
+            await metaMaskService.cancelTransaction(cancelSignatureRequest);
             await dispatch(getTransfersHistory(transferPagination));
             Notifications.transferSuccessfullyCanceled();
         } catch (error) {
@@ -103,9 +130,9 @@ const TransactionsHistory: React.FC = () => {
 
         (async() => {
             try {
-                await dispatch(getTransfersHistory(transferPagination));
+                transferPagination.networkId && await dispatch(getTransfersHistory(transferPagination));
             } catch (error) {
-                Notifications.couldNotGetTransfersHistory()
+                Notifications.couldNotGetTransfersHistory();
             }
         })();
     }, [transferPagination]);
@@ -113,13 +140,27 @@ const TransactionsHistory: React.FC = () => {
     useEffect(() => {
         /** Set's ETH network as default if both wallets connected. */
         if (areBothWalletsConnected) {
-            setActiveNetwork(Networks.ETH);
+            setActiveNetwork(getNetworkByType(NetworkTypes.EVM));
             return;
         }
 
-        if (isCasperConnected) {
-            setActiveNetwork(Networks.CASPER);
+        if (isMetamaskConnected) {
+            setActiveNetwork(getNetworkByType(NetworkTypes.EVM));
         }
+
+        if (isCasperConnected) {
+            setActiveNetwork(getNetworkByType(NetworkTypes.CASPER));
+        }
+    }, [networks]);
+
+    useEffect(() => {
+        (async() => {
+            try {
+                await dispatch(getConnectedNetworks());
+            } catch (e: any) {
+                Notifications.couldNotGetConnectedNetworks();
+            }
+        })();
     }, []);
 
     /** Reset's transfer pagination if active network was changed. */
@@ -131,7 +172,7 @@ const TransactionsHistory: React.FC = () => {
         setTransferPagination(new TransferPagination(
             pubKey,
             activeSignature,
-            activeNetwork,
+            activeNetwork.id,
             appConfig.numbers.ZERO_NUMBER,
             appConfig.numbers.FIVE_NUMBER
         ));
@@ -143,16 +184,16 @@ const TransactionsHistory: React.FC = () => {
                 <div className="transactions-history__menu__switch">
                     <button
                         aria-label="Switch to ETH"
-                        className={getSwitchButtonClassName(Networks.ETH)}
-                        onClick={() => changeActiveSwitchButton(Networks.ETH)}
+                        className={getSwitchButtonClassName(NetworkTypes.EVM)}
+                        onClick={() => changeActiveSwitchButton(NetworkTypes.EVM)}
                         disabled={!areBothWalletsConnected}
                     >
                         ETH
                     </button>
                     <button
                         aria-label="Switch to Casper"
-                        className={getSwitchButtonClassName(Networks.CASPER)}
-                        onClick={() => changeActiveSwitchButton(Networks.CASPER)}
+                        className={getSwitchButtonClassName(NetworkTypes.CASPER)}
+                        onClick={() => changeActiveSwitchButton(NetworkTypes.CASPER)}
                         disabled={!areBothWalletsConnected}
                     >
                         CASPER
@@ -177,7 +218,7 @@ const TransactionsHistory: React.FC = () => {
                     transfers.length ?
                         transfers.map((transfer: Transfer, index: number) =>
                             <TransferItem
-                                cancelTransfer={cancelCurrentTransfer}
+                                cancelTransfer={cancelTransfer}
                                 copyWalletAddress={copyWalletAddress}
                                 encodeTransferStatus={encodeTransferStatus}
                                 transfer={transfer}

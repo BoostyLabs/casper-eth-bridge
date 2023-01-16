@@ -36,7 +36,7 @@ export const TokensModal: React.FC<TokensModalProps> = ({ isOpen, onClose, netwo
                 Notifications.couldNotGetSupportedTokens();
             }
         })();
-    }, []);
+    }, [networkId]);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose}>

@@ -253,6 +253,11 @@ func (s *Connector) BridgeInSignature(ctx context.Context, req *transferspb.Brid
 		return nil, status.Error(codes.InvalidArgument, Error.New(fmt.Sprintf("couldn't set int as %s to big.Int", req.Amount)).Error())
 	}
 
+	gasCommission, ok := big.NewInt(0).SetString(req.GasCommission, 10)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, Error.New(fmt.Sprintf("couldn't set gas commission %s to big.Int", req.GasCommission)).Error())
+	}
+
 	// TODO: uncoment after casper fixing.
 	// amount, ok := new(big.Float).SetString(req.Amount)
 	// if !ok {
@@ -273,6 +278,7 @@ func (s *Connector) BridgeInSignature(ctx context.Context, req *transferspb.Brid
 			NetworkName: req.GetDestination().GetNetworkName(),
 			Address:     req.GetDestination().GetAddress(),
 		},
+		GasCommission: gasCommission,
 	}
 
 	signatureResponse, err := s.connector.BridgeInSignature(ctx, getSignature)
@@ -288,9 +294,9 @@ func (s *Connector) BridgeInSignature(ctx context.Context, req *transferspb.Brid
 	}
 
 	response := transferspb.BridgeInSignatureResponse{
-		Token:        token,
-		Amount:       signatureResponse.Amount.String(),
-		GasComission: signatureResponse.GasComission,
+		Token:         token,
+		Amount:        signatureResponse.Amount.String(),
+		GasCommission: signatureResponse.GasCommission,
 		Destination: &transferspb.StringNetworkAddress{
 			NetworkName: signatureResponse.Destination.NetworkName,
 			Address:     signatureResponse.Destination.Address,
@@ -304,9 +310,34 @@ func (s *Connector) BridgeInSignature(ctx context.Context, req *transferspb.Brid
 }
 
 // CancelSignature returns signature for user to return funds.
-func (s *Connector) CancelSignature(context.Context, *transferspb.CancelSignatureRequest) (*transferspb.CancelSignatureResponse, error) {
-	// TODO: implement.
-	return nil, nil
+func (s *Connector) CancelSignature(ctx context.Context, req *transferspb.CancelSignatureRequest) (*transferspb.CancelSignatureResponse, error) {
+	commission, ok := new(big.Int).SetString(req.Commission, 10)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, Error.New(fmt.Sprintf("couldn't set commission %s to big.Int", req.Commission)).Error())
+	}
+
+	amount, ok := big.NewInt(0).SetString(req.Amount, 10)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, Error.New(fmt.Sprintf("couldn't set amount %s to big.Int", req.Amount)).Error())
+	}
+
+	cancelSignature := chains.CancelSignatureRequest{
+		Nonce:      new(big.Int).SetUint64(req.Nonce),
+		Token:      common.BytesToAddress(req.Token),
+		Recipient:  common.BytesToAddress(req.Recipient),
+		Commission: commission,
+		Amount:     amount,
+	}
+	signatureResponse, err := s.connector.CancelSignature(ctx, cancelSignature)
+	if err != nil {
+		s.log.Error("could not get signature", Error.Wrap(err))
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	response := transferspb.CancelSignatureResponse{
+		Signature: signatureResponse.Signature,
+	}
+	return &response, nil
 }
 
 func (s *Connector) logEvent(eventType chains.EventType, event *connectorpb.Event) {

@@ -61,12 +61,12 @@ func (controller *Transfers) Estimate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	params := mux.Vars(r)
-	senderNetwork := networks.Type(params["sender-network"])
+	senderNetwork := networks.Name(params["sender-network"])
 	if err := senderNetwork.Validate(); err != nil {
 		controller.serveError(w, http.StatusBadRequest, ErrTransfers.Wrap(errs.Combine(errors.New("sender-network parameter invalid"), err)))
 		return
 	}
-	recipientNetwork := networks.Type(params["recipient-network"])
+	recipientNetwork := networks.Name(params["recipient-network"])
 	if err := recipientNetwork.Validate(); err != nil {
 		controller.serveError(w, http.StatusBadRequest, ErrTransfers.Wrap(errs.Combine(errors.New("recipient-network parameter invalid"), err)))
 		return
@@ -88,40 +88,6 @@ func (controller *Transfers) Estimate(w http.ResponseWriter, r *http.Request) {
 
 	if err = json.NewEncoder(w).Encode(preview); err != nil {
 		controller.log.Error("failed to write json error response", ErrTransfers.Wrap(err))
-	}
-}
-
-// Cancel cancels a transfer in the CONFIRMING status, returning the funds to the sender after deducting the commission for issuing the transaction.
-func (controller *Transfers) Cancel(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	w.Header().Set("Content-Type", "application/json")
-
-	params := mux.Vars(r)
-	transferID, err := strconv.ParseUint(params["transfer-id"], 10, 64)
-	if err != nil {
-		controller.serveError(w, http.StatusBadRequest, ErrTransfers.Wrap(errs.Combine(errors.New("transfer-id parameter invalid"), err)))
-		return
-	}
-
-	signatureHex := mux.Vars(r)["signature-hex"]
-	signature, err := hex.DecodeString(signatureHex)
-	if err != nil {
-		controller.serveError(w, http.StatusBadRequest, ErrTransfers.Wrap(errs.Combine(errors.New("signature parameter is not in hex format"), err)))
-		return
-	}
-
-	pubKeyHex := mux.Vars(r)["pub-key-hex"]
-	pubKey, err := hex.DecodeString(pubKeyHex)
-	if err != nil {
-		controller.serveError(w, http.StatusBadRequest, ErrTransfers.Wrap(errs.Combine(errors.New("public key parameter is not in hex format"), err)))
-		return
-	}
-
-	err = controller.transfers.Cancel(ctx, transfers.ID(transferID), signature, pubKey)
-	if err != nil {
-		controller.log.Error("could not cancel pending transfer", ErrTransfers.Wrap(err))
-		controller.serveError(w, http.StatusInternalServerError, ErrTransfers.Wrap(err))
-		return
 	}
 }
 
@@ -216,11 +182,80 @@ func (controller *Transfers) BridgeInSignature(w http.ResponseWriter, r *http.Re
 	}{
 		Token:        hex.EncodeToString(signature.Token),
 		Amount:       signature.Amount,
-		GasComission: signature.GasComission,
+		GasComission: signature.GasCommission,
 		Destination:  signature.Destination,
 		Deadline:     signature.Deadline,
 		Nonce:        signature.Nonce,
 		Signature:    fmt.Sprintf("0x%s", hex.EncodeToString(signature.Signature)),
+	}
+
+	if err = json.NewEncoder(w).Encode(response); err != nil {
+		controller.log.Error("failed to write json error response", ErrTransfers.Wrap(err))
+	}
+}
+
+// CancelSignature returns signature for user to return funds.
+func (controller *Transfers) CancelSignature(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	w.Header().Set("Content-Type", "application/json")
+
+	params := mux.Vars(r)
+
+	transferID, err := strconv.ParseUint(params["transfer-id"], 10, 64)
+	if err != nil {
+		controller.serveError(w, http.StatusBadRequest, ErrTransfers.New("invalid transfer id"))
+		return
+	}
+
+	signatureParam := params["signature"]
+	publicKeyParam := params["public-key"]
+
+	networkID, err := strconv.Atoi(params["network-id"])
+	if err != nil {
+		controller.serveError(w, http.StatusBadRequest, ErrTransfers.New("invalid network id"))
+		return
+	}
+
+	signature, err := networks.StringToBytes(networks.ID(networkID), signatureParam)
+	if err != nil {
+		controller.serveError(w, http.StatusBadRequest, ErrTransfers.Wrap(err))
+		return
+	}
+
+	publicKey, err := networks.StringToBytes(networks.ID(networkID), publicKeyParam)
+	if err != nil {
+		controller.serveError(w, http.StatusBadRequest, ErrTransfers.Wrap(err))
+		return
+	}
+
+	signatureResponse, err := controller.transfers.CancelSignature(ctx, transfers.CancelSignatureRequest{
+		TransferID: transferID,
+		Signature:  signature,
+		NetworkID:  uint32(networkID),
+		PublicKey:  publicKey,
+	})
+	if err != nil {
+		controller.log.Error("could not get cancel signature", ErrTransfers.Wrap(err))
+		controller.serveError(w, http.StatusInternalServerError, ErrTransfers.Wrap(err))
+		return
+	}
+
+	response := struct {
+		Status     string `json:"status"`
+		Nonce      uint64 `json:"nonce"`
+		Signature  string `json:"signature"`
+		Token      string `json:"token"`
+		Recipient  string `json:"recipient"`
+		Commission string `json:"commission"`
+		Amount     string `json:"amount"`
+	}{
+		Status:     signatureResponse.Status,
+		Nonce:      signatureResponse.Nonce,
+		Signature:  fmt.Sprintf("0x%s", networks.BytesToString(networks.ID(networkID), signatureResponse.Signature)),
+		Token:      networks.BytesToString(networks.ID(networkID), signatureResponse.Token),
+		Recipient:  networks.BytesToString(networks.ID(networkID), signatureResponse.Recipient),
+		Commission: signatureResponse.Commission,
+		Amount:     signatureResponse.Amount,
 	}
 
 	if err = json.NewEncoder(w).Encode(response); err != nil {

@@ -3,7 +3,7 @@ module github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services
 go 1.18
 
 require (
-	github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen v0.0.0-20230106160442-a6e02e134007
+	github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen v0.0.0-20230116121155-9df4c374924a
 	github.com/BoostyLabs/evmsignature v0.0.0-20220607084200-3e6bbbc9a60f
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/caarlos0/env/v6 v6.10.1
@@ -15,7 +15,6 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/portto/solana-go-sdk v1.23.0
 	github.com/rs/cors v1.8.2
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
@@ -27,7 +26,6 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/BoostyLabs/venly v0.0.0-20220525101407-1290ddd74c27 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -39,7 +37,6 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rjeczalik/notify v0.9.2 // indirect
 	github.com/robpike/filter v0.0.0-20150108201509-2984852a2183 // indirect

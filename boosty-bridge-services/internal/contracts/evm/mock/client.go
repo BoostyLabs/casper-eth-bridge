@@ -17,6 +17,11 @@ func New() evm.Transfer {
 	return &MockClient{}
 }
 
+// TransferOutSignature generates signature for transfer out transaction.
+func (c *MockClient) TransferOutSignature(ctx context.Context, transferOut evm.TransferOutRequest) ([]byte, error) {
+	return []byte{}, nil
+}
+
 // TransferOut initiates outbound bridge transaction only for contract owner.
 func (m *MockClient) TransferOut(ctx context.Context, transferOut evm.TransferOutRequest) error {
 	return nil

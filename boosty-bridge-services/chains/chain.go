@@ -5,18 +5,12 @@ package chains
 
 import (
 	"context"
-	"errors"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/networks"
-)
-
-var (
-	// ErrInvalidName indicates that transaction type is not valid.
-	ErrInvalidName = errors.New("network is not supported or its name invalid")
 )
 
 // Bridge exposes access to the bridge back-end methods.
@@ -43,6 +37,8 @@ type Connector interface {
 	GetChainName() string
 	// BridgeInSignature returns signature for user to send bridgeIn transaction.
 	BridgeInSignature(context.Context, BridgeInSignatureRequest) (BridgeInSignatureResponse, error)
+	// CancelSignature returns signature for user to return funds.
+	CancelSignature(context.Context, CancelSignatureRequest) (CancelSignatureResponse, error)
 
 	// AddEventSubscriber adds subscriber to event publisher.
 	AddEventSubscriber() EventSubscriber
@@ -160,20 +156,35 @@ type Estimation struct {
 
 // BridgeInSignatureRequest describes the values needed to generate bridge in signature.
 type BridgeInSignatureRequest struct {
-	User        common.Address
-	Nonce       *big.Int
-	Token       string
-	Amount      *big.Int
-	Destination networks.Address
+	User          common.Address
+	Nonce         *big.Int
+	Token         string
+	Amount        *big.Int
+	Destination   networks.Address
+	GasCommission *big.Int
 }
 
 // BridgeInSignatureResponse describes the values needed to send bridge in transaction.
 type BridgeInSignatureResponse struct {
-	Token        string
-	Amount       *big.Int
-	GasComission string
-	Destination  networks.Address
-	Deadline     string
-	Nonce        *big.Int
-	Signature    []byte
+	Token         string
+	Amount        *big.Int
+	GasCommission string
+	Destination   networks.Address
+	Deadline      string
+	Nonce         *big.Int
+	Signature     []byte
+}
+
+// CancelSignatureRequest describes the values needed to generate cancel signature.
+type CancelSignatureRequest struct {
+	Nonce      *big.Int
+	Token      common.Address
+	Recipient  common.Address
+	Commission *big.Int
+	Amount     *big.Int
+}
+
+// CancelSignatureResponse describes the values needed to cancel transaction.
+type CancelSignatureResponse struct {
+	Signature []byte
 }

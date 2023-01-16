@@ -15,7 +15,7 @@ import (
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/gateway/controllers"
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/networks"
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/logger"
-	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/server"
+	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/server"
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/transfers"
 )
 
@@ -70,8 +70,8 @@ func NewServer(config Config, log logger.Logger, listener net.Listener, networks
 	transfersRouter.HandleFunc("/history/{signature-hex}/{pub-key-hex}", transfersController.History).Methods(http.MethodGet)
 	transfersRouter.HandleFunc("/{tx}", transfersController.Info).Methods(http.MethodGet)
 	transfersRouter.HandleFunc("/estimate/{sender-network}/{recipient-network}/{token-id}/{amount}", transfersController.Estimate).Methods(http.MethodGet)
-	transfersRouter.HandleFunc("/{transfer-id}/{signature-hex}/{pub-key-hex}", transfersController.Cancel).Methods(http.MethodDelete)
 	transfersRouter.HandleFunc("/bridge-in-signature", transfersController.BridgeInSignature).Methods(http.MethodPost)
+	transfersRouter.HandleFunc("/cancel-signature/{transfer-id}/{network-id}/{signature}/{public-key}", transfersController.CancelSignature).Methods(http.MethodGet)
 
 	apiRouter.PathPrefix("/docs/").Handler(http.StripPrefix("/api/v0/docs", http.FileServer(http.Dir("./gateway/docs/console"))))
 

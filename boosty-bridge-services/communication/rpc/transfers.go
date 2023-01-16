@@ -22,7 +22,7 @@ type transfersRPC struct {
 }
 
 // Estimate returns approximate information about transfer fee and time.
-func (transfersRPC *transfersRPC) Estimate(ctx context.Context, sender, recipient networks.Type, tokenID uint32, amount string) (transfers.Estimate, error) {
+func (transfersRPC *transfersRPC) Estimate(ctx context.Context, sender, recipient networks.Name, tokenID uint32, amount string) (transfers.Estimate, error) {
 	estimatepb, err := transfersRPC.client.EstimateTransfer(ctx, &transferspb.EstimateTransferRequest{
 		SenderNetwork:    string(sender),
 		RecipientNetwork: string(recipient),
@@ -101,17 +101,6 @@ func (transfersRPC *transfersRPC) Info(ctx context.Context, txHash string) ([]tr
 	return txTransfers, nil
 }
 
-// Cancel cancels a transfer in the CONFIRMING status, returning the funds to the sender
-// after deducting the commission for issuing the transaction.
-func (transfersRPC *transfersRPC) Cancel(ctx context.Context, id transfers.ID, signature, pubKey []byte) error {
-	_, err := transfersRPC.client.CancelTransfer(ctx, &transferspb.CancelTransferRequest{
-		TransferId: uint64(id),
-		Signature:  signature,
-		PublicKey:  pubKey,
-	})
-	return Error.Wrap(err)
-}
-
 // History returns paginated list of transfers.
 func (transfersRPC *transfersRPC) History(ctx context.Context, offset, limit uint64, signature, pubKey []byte, networkID uint32) (transfers.Page, error) {
 	transferHistoryResponse, err := transfersRPC.client.TransferHistory(ctx, &transferspb.TransferHistoryRequest{
@@ -182,9 +171,9 @@ func (transfersRPC *transfersRPC) BridgeInSignature(ctx context.Context, req tra
 	})
 
 	response := transfers.BridgeInSignatureResponse{
-		Token:        signatureResponse.GetToken(),
-		Amount:       signatureResponse.GetAmount(),
-		GasComission: signatureResponse.GetGasComission(),
+		Token:         signatureResponse.GetToken(),
+		Amount:        signatureResponse.GetAmount(),
+		GasCommission: signatureResponse.GetGasCommission(),
 		Destination: networks.Address{
 			NetworkName: signatureResponse.GetDestination().GetNetworkName(),
 			Address:     signatureResponse.GetDestination().GetAddress(),
@@ -195,4 +184,29 @@ func (transfersRPC *transfersRPC) BridgeInSignature(ctx context.Context, req tra
 	}
 
 	return response, Error.Wrap(err)
+}
+
+// CancelSignature returns signature for user to return funds.
+func (transfersRPC *transfersRPC) CancelSignature(ctx context.Context, req transfers.CancelSignatureRequest) (transfers.CancelSignatureResponse, error) {
+	cancelTransferResponse, err := transfersRPC.client.CancelTransfer(ctx, &transferspb.CancelTransferRequest{
+		TransferId: req.TransferID,
+		Signature:  req.Signature,
+		NetworkId:  req.NetworkID,
+		PublicKey:  req.PublicKey,
+	})
+	if err != nil {
+		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
+	}
+
+	response := transfers.CancelSignatureResponse{
+		Status:     cancelTransferResponse.Status,
+		Nonce:      cancelTransferResponse.Nonce,
+		Signature:  cancelTransferResponse.Signature,
+		Token:      cancelTransferResponse.Token,
+		Recipient:  cancelTransferResponse.Recipient,
+		Commission: cancelTransferResponse.Commission,
+		Amount:     cancelTransferResponse.Amount,
+	}
+
+	return response, nil
 }

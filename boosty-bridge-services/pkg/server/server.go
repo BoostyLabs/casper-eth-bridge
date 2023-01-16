@@ -1,6 +1,8 @@
 package server
 
-import "context"
+import (
+	"context"
+)
 
 // Server provides access to all server methods.
 type Server interface {

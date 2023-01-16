@@ -29,7 +29,9 @@ enum SwapItems {
 
 const Swap: React.FC = () => {
     const dispatch = useDispatch();
-    const { networks, activeSupportedToken } = useSelector((state: RootState) => state.networksReducer);
+    const { networks, activeSupportedToken, supportedTokens } = useSelector((state: RootState) => state.networksReducer);
+    // TODO: finalize it when supported tokens will be extended.
+    const SUPPORTED_TOKEN = supportedTokens[appConfig.numbers.ZERO_NUMBER];
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState<boolean>(false);
     const [isTokensModalOpen, setIsTokensModalOpen] = useState<boolean>(false);
     const [selectedSwapItem, setSelectedSwapItem] = useState<SwapItems>(SwapItems.Token);
@@ -119,7 +121,7 @@ const Swap: React.FC = () => {
         const transferEstimateRequest = new TransferEstimateRequest(
             firstTokenBlock.name,
             secondTokenBlock.name,
-            firstTokenBlock.id,
+            SUPPORTED_TOKEN.id,
             tokenAmount,
         );
         try {
@@ -202,7 +204,7 @@ const Swap: React.FC = () => {
                     <button aria-label="Swap" className="swap__btn" onClick={estimateCurrentTransfer}>Swap</button>
                 }
             </div>
-            <TokensModal isOpen={isTokensModalOpen} onClose={() => setIsTokensModalOpen(false)} networkId={appConfig.numbers.ONE_NUMBER} />
+            <TokensModal isOpen={isTokensModalOpen} onClose={() => setIsTokensModalOpen(false)} networkId={firstTokenBlock.id} />
             <TransactionModal
                 isOpen={isTransactionModalOpen}
                 onClose={() => setIsTransactionModalOpen(false)}

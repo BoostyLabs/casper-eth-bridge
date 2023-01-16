@@ -71,13 +71,17 @@ func NewService(gctx context.Context, config Config, log logger.Logger, bridge c
 
 // Metadata returns metadata of the network this connector provides.
 func (service *Service) Metadata(ctx context.Context) chains.NetworkMetadata {
+	id := networks.IDCasperTest
+	if !service.config.IsTestnet {
+		id = networks.IDCasper
+	}
+
 	return chains.NetworkMetadata{
-		ID:          networks.IDCasper,
+		ID:          id,
 		Name:        service.config.ChainName,
 		NodeAddress: service.config.RPCNodeAddress,
-		// TODO: change for prod.
-		Type:      networks.TypeCasper,
-		IsTestnet: service.config.IsTestnet,
+		Type:        networks.TypeCasper,
+		IsTestnet:   service.config.IsTestnet,
 	}
 }
 
@@ -514,6 +518,12 @@ func (service *Service) GetChainName() string {
 func (service *Service) BridgeInSignature(context.Context, chains.BridgeInSignatureRequest) (chains.BridgeInSignatureResponse, error) {
 	// TODO: add implementation.
 	return chains.BridgeInSignatureResponse{}, nil
+}
+
+// CancelSignature returns signature for user to return funds.
+func (service *Service) CancelSignature(context.Context, chains.CancelSignatureRequest) (chains.CancelSignatureResponse, error) {
+	// TODO: implement.
+	return chains.CancelSignatureResponse{}, nil
 }
 
 // AddEventSubscriber adds subscriber to event publisher.
