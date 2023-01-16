@@ -2,6 +2,7 @@ import { CasperLabsHelper } from 'casper-js-sdk/dist/@types/casperlabsSigner';
 
 import { EVMProvider } from '@/ethers';
 import { SolanaProvider } from '@/phantom';
+import { CancelSignatureRequest } from '@/transfers';
 
 /** Defines web3 provider to communicate with Blockchain Node via JSON-RPC. */
 type Provider = typeof EVMProvider | CasperLabsHelper | typeof SolanaProvider;
@@ -13,4 +14,5 @@ export interface Wallet {
     sign: (message: string) => Promise<string>;
     connect: () => Promise<void>;
     sendTransaction: (receiver: string, amount: string) => Promise<void>;
+    cancelTransaction: (request: CancelSignatureRequest) => Promise<void>;
 };
