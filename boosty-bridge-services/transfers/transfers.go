@@ -13,16 +13,15 @@ import (
 // Bridge exposes access to the bridge back-end methods related to transfers.
 type Bridge interface {
 	// Estimate returns approximate information about transfer fee and time.
-	Estimate(ctx context.Context, sender, recipient networks.Type, tokenID uint32, amount string) (Estimate, error)
+	Estimate(ctx context.Context, sender, recipient networks.Name, tokenID uint32, amount string) (Estimate, error)
 	// Info returns list of transfers of triggering transaction.
 	Info(ctx context.Context, txHash string) ([]Transfer, error)
-	// Cancel cancels a transfer in the CONFIRMING status, returning the funds to the sender
-	// after deducting the commission for issuing the transaction.
-	Cancel(ctx context.Context, id ID, signature, pubKey []byte) error
 	// History returns paginated list of transfers.
 	History(ctx context.Context, offset, limit uint64, signature, pubKey []byte, networkID uint32) (Page, error)
 	// BridgeInSignature returns signature for user to send bridgeIn transaction.
 	BridgeInSignature(ctx context.Context, req BridgeInSignatureRequest) (BridgeInSignatureResponse, error)
+	// CancelSignature returns signature for user to return funds.
+	CancelSignature(context.Context, CancelSignatureRequest) (CancelSignatureResponse, error)
 }
 
 // Transfer hold all information about transferring funds from one network to another.
@@ -83,11 +82,30 @@ type BridgeInSignatureRequest struct {
 
 // BridgeInSignatureResponse describes the values needed to send bridge in transaction.
 type BridgeInSignatureResponse struct {
-	Token        []byte
-	Amount       string
-	GasComission string
-	Destination  networks.Address
-	Deadline     string
-	Nonce        uint64
-	Signature    []byte
+	Token         []byte
+	Amount        string
+	GasCommission string
+	Destination   networks.Address
+	Deadline      string
+	Nonce         uint64
+	Signature     []byte
+}
+
+// CancelSignatureRequest describes the values needed to generate transfer out signature.
+type CancelSignatureRequest struct {
+	TransferID uint64
+	Signature  []byte
+	NetworkID  uint32
+	PublicKey  []byte
+}
+
+// CancelSignatureResponse describes the values needed to send transfer out transaction.
+type CancelSignatureResponse struct {
+	Status     string
+	Nonce      uint64
+	Signature  []byte
+	Token      []byte
+	Recipient  []byte
+	Commission string
+	Amount     string
 }

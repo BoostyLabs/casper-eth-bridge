@@ -79,8 +79,16 @@ func New(gctx context.Context, config Config, log logger.Logger, bridge chains.B
 
 // Metadata returns ethereum network metadata.
 func (service *Service) Metadata(ctx context.Context) chains.NetworkMetadata {
+	var id networks.ID
+	switch {
+	case networks.NameEth.String() == service.GetChainName():
+		id = networks.IDEth
+	case networks.NameGoerli.String() == service.GetChainName():
+		id = networks.IDGoerli
+	}
+
 	return chains.NetworkMetadata{
-		ID:          networks.IDEth,
+		ID:          id,
 		Name:        service.GetChainName(),
 		NodeAddress: service.config.NodeAddress,
 		Type:        networks.TypeEVM,
@@ -371,11 +379,7 @@ func (service *Service) GetChainName() string {
 
 // BridgeInSignature returns signature for user to send bridgeIn transaction.
 func (service *Service) BridgeInSignature(ctx context.Context, req chains.BridgeInSignatureRequest) (chains.BridgeInSignatureResponse, error) {
-	commission := new(big.Float)
-	commissionInt, _ := commission.Int64()
-	commissionBigInt := big.NewInt(commissionInt)
-
-	if req.Amount.Cmp(commissionBigInt) <= 0 {
+	if req.Amount.Cmp(req.GasCommission) <= 0 {
 		return chains.BridgeInSignatureResponse{}, Error.New("the amount must be greater than the gas commission")
 	}
 
@@ -386,7 +390,7 @@ func (service *Service) BridgeInSignature(ctx context.Context, req chains.Bridge
 		User:               req.User,
 		Token:              common.HexToAddress(req.Token),
 		Amount:             req.Amount,
-		GasCommission:      commissionBigInt,
+		GasCommission:      req.GasCommission,
 		DestinationChain:   req.Destination.NetworkName,
 		DestinationAddress: req.Destination.Address,
 		Deadline:           deadline,
@@ -396,16 +400,33 @@ func (service *Service) BridgeInSignature(ctx context.Context, req chains.Bridge
 	signature, err := service.transfer.GetBridgeInSignature(ctx, bridgeIn)
 
 	response := chains.BridgeInSignatureResponse{
-		Token:        req.Token,
-		Amount:       req.Amount,
-		GasComission: commissionBigInt.String(),
-		Destination:  req.Destination,
-		Deadline:     deadline.String(),
-		Nonce:        req.Nonce,
-		Signature:    signature,
+		Token:         req.Token,
+		Amount:        req.Amount,
+		GasCommission: req.GasCommission.String(),
+		Destination:   req.Destination,
+		Deadline:      deadline.String(),
+		Nonce:         req.Nonce,
+		Signature:     signature,
 	}
 
 	return response, Error.Wrap(err)
+}
+
+// CancelSignature returns signature for user to return funds.
+func (service *Service) CancelSignature(ctx context.Context, req chains.CancelSignatureRequest) (chains.CancelSignatureResponse, error) {
+	transferOut := TransferOutRequest{
+		Token:      req.Token,
+		Recipient:  req.Recipient,
+		Amount:     req.Amount,
+		Commission: req.Commission,
+		Nonce:      req.Nonce,
+	}
+
+	signature, err := service.transfer.TransferOutSignature(ctx, transferOut)
+
+	return chains.CancelSignatureResponse{
+		Signature: signature,
+	}, Error.Wrap(err)
 }
 
 // AddEventSubscriber adds subscriber to event publisher.

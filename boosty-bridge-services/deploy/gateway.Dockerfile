@@ -14,3 +14,4 @@ ARG APP_DATA_DIR=/app/data
 RUN mkdir -p ${APP_DATA_DIR}
 COPY --from=builder /app/main .
 VOLUME ["${APP_DATA_DIR}"]
+COPY --from=builder /app/gateway/docs/console ./gateway/docs/console

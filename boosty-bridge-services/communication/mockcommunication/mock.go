@@ -121,7 +121,7 @@ func (networksMock *NetworksMock) SetSupportedTokens(impl func(ctx context.Conte
 // Transfers provides access to the transfers.Bridge rpc methods.
 func (rpc *MockCommunication) Transfers() transfers.Bridge {
 	return &transfersMock{
-		estimateImpl: func(ctx context.Context, sender, recipient networks.Type, tokenID uint32, amount string) (transfers.Estimate, error) {
+		estimateImpl: func(ctx context.Context, sender, recipient networks.Name, tokenID uint32, amount string) (transfers.Estimate, error) {
 			return transfers.Estimate{
 				Fee:                       "0.333",
 				FeePercentage:             "4",
@@ -203,6 +203,9 @@ func (rpc *MockCommunication) Transfers() transfers.Bridge {
 		bridgeInSignatureImpl: func(ctx context.Context, req transfers.BridgeInSignatureRequest) (transfers.BridgeInSignatureResponse, error) {
 			return transfers.BridgeInSignatureResponse{}, nil
 		},
+		cancelSignatureImpl: func(ctx context.Context, req transfers.CancelSignatureRequest) (transfers.CancelSignatureResponse, error) {
+			return transfers.CancelSignatureResponse{}, nil
+		},
 	}
 }
 
@@ -211,20 +214,21 @@ var _ transfers.Bridge = (*transfersMock)(nil)
 
 // transfersMock provides access to the transfers.Bridge.
 type transfersMock struct {
-	estimateImpl          func(ctx context.Context, sender, recipient networks.Type, tokenID uint32, amount string) (transfers.Estimate, error)
+	estimateImpl          func(ctx context.Context, sender, recipient networks.Name, tokenID uint32, amount string) (transfers.Estimate, error)
 	infoImpl              func(ctx context.Context, txHash string) ([]transfers.Transfer, error)
 	cancelImpl            func(ctx context.Context, id transfers.ID, signature, pubKey []byte) error
 	historyImpl           func(ctx context.Context, offset, limit uint64, signature, pubKey []byte, networkID uint32) (transfers.Page, error)
 	bridgeInSignatureImpl func(ctx context.Context, req transfers.BridgeInSignatureRequest) (transfers.BridgeInSignatureResponse, error)
+	cancelSignatureImpl   func(ctx context.Context, req transfers.CancelSignatureRequest) (transfers.CancelSignatureResponse, error)
 }
 
 // Estimate returns approximate information about transfer fee and time.
-func (transfersMock *transfersMock) Estimate(ctx context.Context, sender, recipient networks.Type, tokenID uint32, amount string) (transfers.Estimate, error) {
+func (transfersMock *transfersMock) Estimate(ctx context.Context, sender, recipient networks.Name, tokenID uint32, amount string) (transfers.Estimate, error) {
 	return transfersMock.estimateImpl(ctx, sender, recipient, tokenID, amount)
 }
 
 // SetEstimate sets Estimate mock implementation.
-func (transfersMock *transfersMock) SetEstimate(impl func(ctx context.Context, sender, recipient networks.Type, tokenID uint32, amount string) (transfers.Estimate, error)) {
+func (transfersMock *transfersMock) SetEstimate(impl func(ctx context.Context, sender, recipient networks.Name, tokenID uint32, amount string) (transfers.Estimate, error)) {
 	transfersMock.estimateImpl = impl
 }
 
@@ -264,6 +268,15 @@ func (transfersMock *transfersMock) BridgeInSignature(ctx context.Context, req t
 
 func (transfersMock *transfersMock) BebridgeInSignature(impl func(ctx context.Context, req transfers.BridgeInSignatureRequest) (transfers.BridgeInSignatureResponse, error)) {
 	transfersMock.bridgeInSignatureImpl = impl
+}
+
+// CancelSignature returns signature for user to send Cancel transaction.
+func (transfersMock *transfersMock) CancelSignature(ctx context.Context, req transfers.CancelSignatureRequest) (transfers.CancelSignatureResponse, error) {
+	return transfersMock.cancelSignatureImpl(ctx, req)
+}
+
+func (transfersMock *transfersMock) BeCancelSignature(impl func(ctx context.Context, req transfers.CancelSignatureRequest) (transfers.CancelSignatureResponse, error)) {
+	transfersMock.cancelSignatureImpl = impl
 }
 
 // Close closes underlying rpc connection.

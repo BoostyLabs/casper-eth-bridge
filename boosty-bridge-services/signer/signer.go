@@ -13,8 +13,6 @@ import (
 var (
 	// ErrNoPrivateKey indicates that private key does not exist.
 	ErrNoPrivateKey = errors.New("private key does not exist")
-	// ErrTransactionNameInvalid indicates that transaction type is not valid.
-	ErrTransactionNameInvalid = errors.New("network is not supported or its name invalid")
 )
 
 const (

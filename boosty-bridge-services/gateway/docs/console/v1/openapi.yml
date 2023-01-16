@@ -524,5 +524,84 @@ paths:
                     type: string
                     example: error_description
     summary: Get supported tokens
+
+  /cancel-signature/{transfer-id}/{network-id}/{signature}/{public-key}:
+    get:
+     description: Returns signature to cancel transfer.
+     parameters:
+       - in: path
+         name: transfer-id
+         required: true
+         schema:
+           type: string
+         description: id of transfer.
+       - in: path
+         name: network-id
+         required: true
+         schema:
+           type: number
+         description: id of network.
+       - in: path
+         name: signature
+         required: true
+         schema:
+           type: string
+         description: authentication proof of sender.
+       - in: path
+         name: public-key
+         required: true
+         schema:
+           type: string
+         description: sender's public key.
+     responses:
+       "200":
+         description: Everything is ok.
+         content:
+           application/json:
+             schema:
+               type: object
+               properties:
+                 status:
+                   type: string
+                   example: status_of_transaction
+                 nonce:
+                   type: string
+                   example: tx_nonce
+                 signature:
+                   type: string
+                   example: signature
+                 token:
+                   type: string
+                   example: token_sm_address
+                 recipient:
+                   type: string
+                   example: address_of_recipient
+                 commission:
+                   type: string
+                   example: 0.04
+                 amount:
+                   type: string
+                   example: 100
+       "400":
+         description: Bad request.
+         content:
+           application/json:
+             schema:
+               type: object
+               properties:
+                 error:
+                   type: string
+                   example: error_description
+       "500":
+         description: Internal error.
+         content:
+           application/json:
+             schema:
+               type: object
+               properties:
+                 error:
+                   type: string
+                   example: error_description
+    summary: Cancel transfer
 components:
   schemas: {}

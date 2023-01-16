@@ -13,7 +13,6 @@ import (
 	"github.com/casper-ecosystem/casper-golang-sdk/sdk"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
-	"github.com/portto/solana-go-sdk/common"
 	"github.com/stretchr/testify/require"
 
 	signer "github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/cmd/signer/db"
@@ -30,11 +29,9 @@ func TestSigner(t *testing.T) {
 
 	signatureEVM := "c165c06e5ba9c5e127fc304a79444066480c4ed3a52691cfb057660291593ac6539aafe31c84f705505d3f819fe28a69350f786712bb9f5b6cfef43eae11274600"
 	signatureCasper := "58784687434a1e68268b6a01b1a7f8d3a2adf395691ee1eebab802ff83065328c82b5ba34594509563e92f67ec209d9765ce75d2f9be0e53ed50c7502c1fb20d"
-	signatureSolana := "e951b4182b1572e8ff73dfde2216573930da2a9883349d6421cc21838aa8880a139737503d7bd54923c4c4f150ad9a6297f6826552175efb698c1afc4c9b4e0a"
 
 	publicKeyEVM := "2807d9de22f235ccc562969628cda551d437afb799d3f8f3baaccbe8ea9379f6344d890efb763c07d503d89d05a1669d15c44e396110a18fde1fc435afb3ad82"
 	publicKeyCasper := "d90cdb7e06d2f2e6a5a1e1999f4e0447003a941c6a039b7749e24a85052863ea"
-	publicKeySolana := "AxHgjH2Hh6tPUqKAoCG92aKPmdv8z4iQjPihKAtFeYdh"
 
 	privateKeyEVM := signer_service.PrivateKey{
 		NetworkType: networks.TypeEVM,
@@ -43,10 +40,6 @@ func TestSigner(t *testing.T) {
 	privateKeyCasper := signer_service.PrivateKey{
 		NetworkType: networks.TypeCasper,
 		Key:         "b0fb23ba3c5a3e327a5624a7a25aa612b4c799e0981a11123d98109d94974020d90cdb7e06d2f2e6a5a1e1999f4e0447003a941c6a039b7749e24a85052863ea",
-	}
-	privateKeySolana := signer_service.PrivateKey{
-		NetworkType: networks.TypeSolana,
-		Key:         "7f906ec962322549ccaf6742bb70376f6379248378782953c07a24bffbb64e8c93e2fe1b54577d59bfec12e11354ccc2eafd508fd8c48c19cffc7ecfcc28ec74",
 	}
 
 	err := godotenv.Overload("./apitesting/configs/.test.signer.env")
@@ -72,9 +65,6 @@ func TestSigner(t *testing.T) {
 			require.NoError(t, err)
 
 			err = repository.Create(ctx, privateKeyCasper)
-			require.NoError(t, err)
-
-			err = repository.Create(ctx, privateKeySolana)
 			require.NoError(t, err)
 		})
 
@@ -106,18 +96,6 @@ func TestSigner(t *testing.T) {
 			require.Equal(t, signatureCasper, hex.EncodeToString(signatureResponse.Signature))
 		})
 
-		t.Run("Sign Solana", func(t *testing.T) {
-			dataTx, err := hex.DecodeString(dataTxHex)
-			require.NoError(t, err)
-
-			signatureResponse, err := signerClient.Sign(context.Background(), &pb_signer.SignRequest{
-				NetworkId: pb_networks.NetworkType_NT_SOLANA,
-				Data:      dataTx,
-			})
-			require.NoError(t, err)
-			require.Equal(t, signatureSolana, hex.EncodeToString(signatureResponse.Signature))
-		})
-
 		t.Run("PublicKey EVM", func(t *testing.T) {
 			publicKeyResponse, err := signerClient.PublicKey(context.Background(), &pb_signer.PublicKeyRequest{
 				NetworkId: pb_networks.NetworkType_NT_EVM,
@@ -132,14 +110,6 @@ func TestSigner(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.Equal(t, publicKeyCasper, hex.EncodeToString(publicKeyResponse.PublicKey))
-		})
-
-		t.Run("PublicKey Solana", func(t *testing.T) {
-			publicKeyResponse, err := signerClient.PublicKey(context.Background(), &pb_signer.PublicKeyRequest{
-				NetworkId: pb_networks.NetworkType_NT_SOLANA,
-			})
-			require.NoError(t, err)
-			require.Equal(t, publicKeySolana, common.PublicKeyFromBytes(publicKeyResponse.PublicKey).String())
 		})
 	})
 }
