@@ -38,4 +38,8 @@ export class PhantomWallet implements Wallet {
     public async sendTransaction(receiver: string, amount: string): Promise<void> {
         // TODO: Will be added after backend implementation.
     };
+
+    public async cancelTransaction(): Promise<void> {
+        // TODO: implement.
+    };
 };

@@ -4,12 +4,13 @@ import { TransferActionsModal } from '@/app/components/TransferActionsModal';
 
 import appConfig from '@/app/configs/appConfig.json';
 import { getDayAndMonth, getHoursAndMinutes } from '@/app/internal/time';
+import { Networks } from '@/networks';
 import { Transfer, TransferStatuses } from '@/transfers';
 
 import copy from '@static/images/common/copy.svg';
 
 type TransferItemProps = {
-    cancelTransfer: (id: number) => void,
+    cancelTransfer: (transferId: number, address: string) => void,
     copyWalletAddress: (walletAddress: string) => void,
     encodeTransferStatus: (transferStatus: TransferStatuses) => number,
     transfer: Transfer,
@@ -38,7 +39,7 @@ export const TransferItem: React.FC<TransferItemProps> = ({ cancelTransfer, copy
         if (isCancelButtonVisible) {
             return;
         }
-        cancelTransfer(transfer.id);
+        cancelTransfer(transfer.id, transfer.sender.address);
         changeTransferActionsModalVisibility();
     };
 

@@ -42,5 +42,5 @@ export class Token {
 
 export enum Networks {
     'CASPER',
-    'ETH',
+    'EVM',
 };
