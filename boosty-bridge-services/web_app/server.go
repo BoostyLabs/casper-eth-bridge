@@ -18,7 +18,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/logger"
-	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/server"
+	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/pkg/server"
 	"github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services/web_app/controllers"
 )
 

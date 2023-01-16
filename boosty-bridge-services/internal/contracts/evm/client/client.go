@@ -69,6 +69,48 @@ func NewClient(ctx context.Context, config Config, signerAddress common.Address,
 	}, nil
 }
 
+// TransferOutSignature generates signature for transfer out transaction.
+func (c *client) TransferOutSignature(ctx context.Context, transferOut evm_chain.TransferOutRequest) ([]byte, error) {
+	var data []byte
+
+	amountStringWithZeros := evmsignature.CreateHexStringFixedLength(fmt.Sprintf("%x", transferOut.Amount))
+	amountByte, err := hex.DecodeString(string(amountStringWithZeros))
+	if err != nil {
+		return nil, err
+	}
+
+	commissionStringWithZeros := evmsignature.CreateHexStringFixedLength(fmt.Sprintf("%x", transferOut.Commission))
+	commissionByte, err := hex.DecodeString(string(commissionStringWithZeros))
+	if err != nil {
+		return nil, err
+	}
+
+	nonceStringWithZeros := evmsignature.CreateHexStringFixedLength(fmt.Sprintf("%x", transferOut.Nonce))
+	nonceByte, err := hex.DecodeString(string(nonceStringWithZeros))
+	if err != nil {
+		return nil, err
+	}
+
+	data = append(data, transferOut.Token.Bytes()...)
+	data = append(data, transferOut.Recipient.Bytes()...)
+	data = append(data, amountByte...)
+	data = append(data, commissionByte...)
+	data = append(data, nonceByte...)
+
+	dataHash := crypto.Keccak256Hash(data)
+
+	ethSignedMessageHash := evm.ToEthSignedMessageHash(dataHash.Bytes())
+
+	signature, err := c.sign(ethSignedMessageHash)
+	if err != nil {
+		return nil, err
+	}
+
+	reformedSignature, err := evm.ToEVMSignature(signature)
+
+	return reformedSignature, err
+}
+
 // TransferOut initiates outbound bridge transaction only for contract owner.
 func (c *client) TransferOut(ctx context.Context, transferOut evm_chain.TransferOutRequest) error {
 	var data []byte
@@ -79,7 +121,7 @@ func (c *client) TransferOut(ctx context.Context, transferOut evm_chain.Transfer
 		return err
 	}
 
-	commissionStringWithZeros := evmsignature.CreateHexStringFixedLength(fmt.Sprintf("%x", transferOut.Commsision))
+	commissionStringWithZeros := evmsignature.CreateHexStringFixedLength(fmt.Sprintf("%x", transferOut.Commission))
 	commissionByte, err := hex.DecodeString(string(commissionStringWithZeros))
 	if err != nil {
 		return err
@@ -111,7 +153,7 @@ func (c *client) TransferOut(ctx context.Context, transferOut evm_chain.Transfer
 		return err
 	}
 
-	_, err = c.instance.TransferOut(c.auth, transferOut.Token, transferOut.Recipient, transferOut.Amount, transferOut.Commsision,
+	_, err = c.instance.TransferOut(c.auth, transferOut.Token, transferOut.Recipient, transferOut.Amount, transferOut.Commission,
 		transferOut.Nonce, reformedSignature)
 
 	return err

@@ -38,6 +38,8 @@ type Config struct {
 
 // Transfer exposes access to the evm transfer methods.
 type Transfer interface {
+	// TransferOutSignature generates signature for transfer out transaction.
+	TransferOutSignature(ctx context.Context, transferOut TransferOutRequest) ([]byte, error)
 	// TransferOut initiates outbound bridge transaction only for contract owner.
 	TransferOut(ctx context.Context, transferOut TransferOutRequest) error
 	// GetBridgeInSignature generates signature for inbound bridge transaction.
@@ -53,7 +55,7 @@ type TransferOutRequest struct {
 	Token      common.Address
 	Recipient  common.Address
 	Amount     *big.Int
-	Commsision *big.Int
+	Commission *big.Int
 	Nonce      *big.Int
 }
 

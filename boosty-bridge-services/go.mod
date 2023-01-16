@@ -3,7 +3,7 @@ module github.com/BoostyLabs/casper-eth-bridge/boosty-bridge-services
 go 1.18
 
 require (
-	github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen v0.0.0-20230106160442-a6e02e134007
+	github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen v0.0.0-20230106164031-6ada7d4b9c46
 	github.com/BoostyLabs/evmsignature v0.0.0-20220607084200-3e6bbbc9a60f
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/caarlos0/env/v6 v6.10.1
