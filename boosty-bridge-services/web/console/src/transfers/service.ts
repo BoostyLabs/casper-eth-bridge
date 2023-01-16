@@ -1,5 +1,5 @@
 import { TransfersClient } from '@/api/transfers';
-import { BridgeInSignatureResponse, SignatureRequest, TransferEstimate, TransferEstimateRequest, TransferPagination, TransfersHistory } from '@/transfers';
+import { BridgeInSignatureResponse, CancelSignatureRequest, CancelSignatureResponse, SignatureRequest, TransferEstimate, TransferEstimateRequest, TransferPagination, TransfersHistory } from '@/transfers';
 
 /**
  * Exposes all transfers domain entities related logic.
@@ -24,6 +24,11 @@ export class TransfersService {
     /** Requests list of transfers by signature. */
     public async history(transferPagination: TransferPagination): Promise<TransfersHistory> {
         return await this.transfers.history(transferPagination);
+    };
+
+    /** Requests signature to cancel transfer. */
+    public async cancelSignature(cancelSignatureRequest: CancelSignatureRequest): Promise<CancelSignatureResponse> {
+        return await this.transfers.cancelSignature(cancelSignatureRequest);
     };
 
     /** Requests transfers signature. */

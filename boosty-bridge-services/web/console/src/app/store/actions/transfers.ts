@@ -33,6 +33,3 @@ export const estimateTransfer = (transferEstimateRequest: TransferEstimateReques
     const transferEstimate = await transfersService.estimate(transferEstimateRequest);
     dispatch(setTransferEstimate(transferEstimate));
 };
-
-/** Canceles transfer. */
-export const cancelTransfer = async(transferId: number, signature: string, pubKey: string) => await transfersService.cancel(transferId, signature, pubKey);
