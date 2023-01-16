@@ -142,4 +142,8 @@ export class CasperWallet implements Wallet {
         const deploy = await this.contractCall(CasperEntryPoints.SEND_TRANSACTION, runtimeArgs);
         await this.casper.sendTransaction(JSON.stringify(deploy), this.RPC_NODE_ADDRESS);
     };
+
+    public async cancelTransaction(): Promise<void> {
+        // TODO: implement.
+    }
 };
