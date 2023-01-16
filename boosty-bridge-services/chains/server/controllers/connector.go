@@ -253,9 +253,9 @@ func (s *Connector) BridgeInSignature(ctx context.Context, req *transferspb.Brid
 		return nil, status.Error(codes.InvalidArgument, Error.New(fmt.Sprintf("couldn't set int as %s to big.Int", req.Amount)).Error())
 	}
 
-	gasCommission, ok := big.NewInt(0).SetString(req.GasComission, 10)
+	gasCommission, ok := big.NewInt(0).SetString(req.GasCommission, 10)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, Error.New(fmt.Sprintf("couldn't set gas commission %s to big.Int", req.GasComission)).Error())
+		return nil, status.Error(codes.InvalidArgument, Error.New(fmt.Sprintf("couldn't set gas commission %s to big.Int", req.GasCommission)).Error())
 	}
 
 	// TODO: uncoment after casper fixing.
@@ -294,9 +294,9 @@ func (s *Connector) BridgeInSignature(ctx context.Context, req *transferspb.Brid
 	}
 
 	response := transferspb.BridgeInSignatureResponse{
-		Token:        token,
-		Amount:       signatureResponse.Amount.String(),
-		GasComission: signatureResponse.GasCommission,
+		Token:         token,
+		Amount:        signatureResponse.Amount.String(),
+		GasCommission: signatureResponse.GasCommission,
 		Destination: &transferspb.StringNetworkAddress{
 			NetworkName: signatureResponse.Destination.NetworkName,
 			Address:     signatureResponse.Destination.Address,

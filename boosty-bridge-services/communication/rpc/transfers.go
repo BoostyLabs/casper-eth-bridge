@@ -173,7 +173,7 @@ func (transfersRPC *transfersRPC) BridgeInSignature(ctx context.Context, req tra
 	response := transfers.BridgeInSignatureResponse{
 		Token:         signatureResponse.GetToken(),
 		Amount:        signatureResponse.GetAmount(),
-		GasCommission: signatureResponse.GetGasComission(),
+		GasCommission: signatureResponse.GetGasCommission(),
 		Destination: networks.Address{
 			NetworkName: signatureResponse.GetDestination().GetNetworkName(),
 			Address:     signatureResponse.GetDestination().GetAddress(),
