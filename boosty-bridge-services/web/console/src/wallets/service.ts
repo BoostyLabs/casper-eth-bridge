@@ -1,3 +1,4 @@
+import { CancelSignatureRequest } from '@/transfers';
 import { Wallet } from '@/wallets';
 
 /**
@@ -33,5 +34,12 @@ export class WalletsService {
     */
     public async sign(message: string): Promise<string> {
         return await this.wallet.sign(message);
+    };
+
+    /** Canceles transaction.
+    * @param {CancelSignatureRequest} cancelSignatureRequest - fields needed to generate signature to cancel transfer.
+    */
+    public async cancelTransaction(cancelSignatureRequest: CancelSignatureRequest): Promise<void> {
+        await this.wallet.cancelTransaction(cancelSignatureRequest);
     };
 };

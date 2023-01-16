@@ -1,5 +1,5 @@
 import { APIClient } from '@/api';
-import { BridgeInSignatureResponse, SignatureRequest, Transfer, TransferEstimate, TransferEstimateRequest, TransferPagination, TransfersHistory } from '@/transfers';
+import { BridgeInSignatureResponse, CancelSignatureRequest, CancelSignatureResponse, SignatureRequest, Transfer, TransferEstimate, TransferEstimateRequest, TransferPagination, TransfersHistory } from '@/transfers';
 
 /**
  * TransfersClient is a http implementation of transfers API.
@@ -64,6 +64,29 @@ export class TransfersClient extends APIClient {
         if (!response.ok) {
             await this.handleError(response);
         }
+    };
+
+    /** Requests signature to cancel transfer.
+     * @param {CancelSignatureRequest} cancelSignatureRequest - fields needed to generate signature to cancel transfer.
+     * @returns {CancelSignatureResponse} - response fields needed for sigature to cancel transfer
+    */
+    public async cancelSignature(cancelSignatureRequest: CancelSignatureRequest): Promise<CancelSignatureResponse> {
+        const path = `${this.ROOT_PATH}/transfers/cancel-signature/${cancelSignatureRequest.transferId}/${cancelSignatureRequest.networkId}/${cancelSignatureRequest.signature}/${cancelSignatureRequest.publicKey}`;
+        const response = await this.http.get(path);
+        if (!response.ok) {
+            await this.handleError(response);
+        }
+        const signature = await response.json();
+
+        return new CancelSignatureResponse(
+            signature.status,
+            signature.nonce,
+            signature.signature,
+            signature.token,
+            signature.recipient,
+            signature.commission,
+            signature.amount,
+        )
     };
 
     /** Requests transfers signature.

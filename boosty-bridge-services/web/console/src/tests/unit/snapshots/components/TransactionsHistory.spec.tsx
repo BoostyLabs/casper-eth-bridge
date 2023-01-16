@@ -27,6 +27,9 @@ describe("TransactionsHistory view", () => {
             transfersReducer: {
                 history: new TransfersHistory(),
                 transferEstimate: new TransferEstimate()
+            },
+            networksReducer: {
+                networks: [],
             }
         };
         let updatedStore = mockStore(initialState);
