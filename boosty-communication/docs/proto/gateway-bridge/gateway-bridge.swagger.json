@@ -113,7 +113,7 @@
         "amount": {
           "type": "string"
         },
-        "gasComission": {
+        "gasCommission": {
           "type": "string"
         },
         "destination": {
