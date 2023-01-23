@@ -5,7 +5,7 @@ It consists of multiple modular swap-in components and supports an increasing nu
 
 ### Architecture overview
 
-![](./assets/readme/arch.png)
+![](./boosty-bridge-services/assets/readme/arch.png)
 
 #### **Off-Chain components:**
 
@@ -25,7 +25,7 @@ It consists of multiple modular swap-in components and supports an increasing nu
 
 ### Bridge
 
-[documentation](https://github.com/BoostyLabs/golden-gate-bridge#readme)
+[documentation](./boosty-bridge/README.md)
 
 ### Connectors
 
