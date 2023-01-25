@@ -20,6 +20,3 @@ Makefile.dev
 Makefile.local
 prodEnv.txt
 testEnv.txt
-
-# configs
-configs/*
