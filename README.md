@@ -637,3 +637,223 @@ Also for all services you need bridge connection config.`${PATH_TO_PROJECT_FOLDE
 **Signer**
 
 `${PATH_TO_PROJECT_FOLDER}/configs/.signer.env `
+
+
+# Example deployment
+*This guide expects that you have cloned repository. All pathes are relative to it*
+
+### Database set up
+We use POSTGRESQL database for signer and bridge. Preferably, keep it separate but to KISS we will combine them for now.
+
+```
+docker run --name postgres -e POSTGRES_PASSWORD=123456 -d postgres -p 5432:5432
+```
+
+### Rust bridge build
+
+##### Prerequisites
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup default nightly
+rustup target add wasm32-unknown-unknown
+cargo install just
+sudo apt install -y protobuf-compiler
+```
+
+Also, you have to install https://github.com/WebAssembly/binaryen utils for wasm contract optimizations.
+
+##### Bridge build
+```
+cd boosty-bridge/poc/bridge-core
+cargo build --release
+```
+
+
+### Go prerequisites
+
+We use go 1.18. You can download it from the official website [GoLang](https://go.dev/dl/), and install it according to the official [instructions](https://go.dev/doc/install).
+
+
+### Deployment
+
+#### Smart contract deployment
+
+You have to generate private keys for Casper and Ethereum.
+We use secp256k1 for Ethereum and ed25519 key scheme for Casper network.
+
+##### Ethereum
+
+You have to deploy smart contract in the `boosty-smart-contracts/ethereum/contracts` directory. Also, you have to deploy test erc20.
+
+##### Casper
+```
+cd boosty-smart-contracts/casper/contract-bridge
+just build-contract-release
+```
+
+You have to deploy boosty-smart-contracts/casper/contract-bridge/bridge-contract.wasm to the casper network.
+
+Also, you have to deploy test erc20 token. https://github.com/casper-ecosystem/erc20
+
+#### Configs
+You have to create the following configs in the boosty-bridge-services/config directory.
+
+.env
+```
+BRIDGE_ADDRESS=localhost:10003
+
+PING_SERVER_TIME=10s
+PING_SERVER_TIMEOUT=1s
+COMMUNICATION_MODE=GRPC
+```
+
+.casper.env
+```
+export BRIDGE_CONTRACT_PACKAGE_HASH=YOUR PACKAGE HASH
+export BRIDGE_IN_EVENT_HASH=YOUR CONTRACT EVENT_TRIGGER NAMED KEY UREF
+export BRIDGE_OUT_EVENT_HASH=YOUR CONTRACT EVENT_TRIGGER NAMED KEY UREF
+export RPC_NODE_ADDRESS=http://136.243.187.84:7777/rpc # You can replace with your node
+export EVENT_NODE_ADDRESS=http://136.243.187.84:9999/events/main # You can replace with your node
+
+export GRPC_SERVER_ADDRESS=localhost:10004
+export CHAIN_NAME=CASPER-TEST
+export STANDARD_PAYMENT_FOR_BRIDGE_OUT=10000000000 # 10 casp
+export IS_TESTNET=true
+export FEE=10 # 10 casp
+export FEE_PERCENTAGE=0.4 # 0,4%
+export ESTIMATED_CONFIRMATION=600 # 10 min
+export SERVER_NAME=casper-connector
+```
+
+.eth.env
+```
+BRIDGE_CONTRACT_ADDRESS=YOUR CONTRACT ADDRESS
+NODE_ADDRESS=YOUR INFURA RPC ADDRESS
+WS_NODE_ADDRESS=YOUR INFURA WS ADDRESS
+
+GRPC_SERVER_ADDRESS=localhost:10005
+FUND_IN_EVENT_HASH=0x702f486f4d225a476770977c5edd22b4cb48bcd23d5b8969ce41f43a61bfc55f
+FUND_OUT_EVENT_HASH=0x22558aff1ae914331914dc5357b1aa7c20bbfae260d698bb745092bca82d0655
+CHAIN_ID=5
+CHAIN_NAME=GOERLI
+IS_TESTNET=true
+BRIDGE_OUT_METHOD_NAME=bridgeOut
+GAS_INCREASING_COEFFICIENT=1.1
+CONFIRMATION_TIME=60 # 1min
+FEE_PERCENTAGE=0.4
+GAS_LIMIT=80000
+NUM_OF_SUBSCRIBERS=5
+SERVER_NAME=eth-connector
+SIGNATURE_VALIDITY_TIME=86400 # 1d
+```
+
+.gateway.env
+```
+GATEWAY_ADDRESS=127.0.0.1:8088
+WEP_APP_ADDRESS=http://localhost:8089
+BRIDGE_ADDRESS=127.0.0.1:10003
+PING_SERVER_TIME=10s
+PING_SERVER_TIMEOUT=1s
+COMMUNICATION_MODE=GRPC
+SERVER_NAME=gateway
+```
+
+.signer.env
+```
+DATABASE="postgresql://postgres:123456@localhost:5432/postgres?sslmode=disable"
+GRPC_SERVER_ADDRESS=localhost:10006
+CHAIN_ID=5
+SERVER_NAME=signer
+```
+
+.web.env
+```
+export STATIC_DIR=FULL PATH TO boosty-bridge-services/web/console
+export CASPER_BRIDGE_CONTRACT=YOUR CASPER BRIDGE ADDRESS
+export CASPER_TOKEN_CONTRACT=YOUR CASPER TOKEN ADDRESS
+export ETH_BRIDGE_CONTRACT=YOUR ETH BRIDGE ADDRESS
+export ETH_TOKEN_CONTRACT=YOUR ETH TOKEN ADDRESS
+export CASPER_NODE_ADDRESS=http://136.243.187.84:7777/rpc ### You can replace with your own if you need
+
+export ADDRESS=localhost:8089
+export GATEWAY_ADDRESS=http://localhost:8088
+export ETH_GAS_LIMIT=115000
+export SERVER_NAME=web-app
+```
+
+#### Signer
+
+Firstly, you need add private keys into the database. Here is example how to do that:
+```
+# Password is 123456
+psql -U postgres -h localhost -p 5432 postgres
+insert into private_keys values('CASPER', 'YOUR KEY IN HEX HERE');
+insert into private_keys values('EVM', 'YOUR KEY IN HEX HERE');
+```
+
+##### Running signer
+```
+cd boosty-bridge-services
+go run cmd/signer/main.go run
+```
+
+##### Bridge
+PLEASE NOTE, THAT THE BRIDGE SUPPOSED TO START BEFORE CONNECTORS AND GATEWAY.
+
+* --conectors - specify connector address
+* --signer-addr - specify signer address
+* --addr - specify bridge host address
+* --init-tables -  should be called with this param only first time.
+
+**Important**:
+Please, update boosty-bridge/poc/bridge-core/src/bin/bridge.rs:170 EVM and CASPER token addresses to allowlist your TOKEN contracts.
+
+```
+cd casper-eth-bridge/boosty-bridge/poc/bridge-core
+# Exports mandatory to run bridge application
+export PG_HOST=localhost
+export PG_PORT=5432
+export PG_USER=postgres
+export PG_PASS=123456
+export PG_DBNAME=postgres
+cargo run --release --bin bridge -- --addr 127.0.0.1:10003 --connectors http://127.0.0.1:10004 --connectors http://127.0.0.1:10005 --signer-addr http://127.0.0.1:10006 --init-tables
+```
+
+#### Connectors
+Update your bridge address in the config directory.
+
+Casper
+```
+cd boosty-bridge-services
+go run cmd/casper/main.go run
+```
+
+Ethereum
+```
+cd boosty-bridge-services
+go run cmd/eth/main.go run
+```
+
+#### Gateway
+
+Gateway is a rest api for bridge.
+```
+cd boosty-bridge-services
+go run cmd/gateway/main.go run
+```
+
+#### Front-end
+Install node 18.12.1.
+```
+cd boosty-bridge-services/web/console
+npm ci
+npm run build
+```
+
+Running web 
+```
+cd boosty-bridge-services
+go run cmd/web_app/main.go run
+```
+
+The application should run under localhost:8089
