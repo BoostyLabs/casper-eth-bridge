@@ -698,6 +698,12 @@ Also, you have to deploy test erc20 token. https://github.com/casper-ecosystem/e
 #### Configs
 You have to create the following configs in the boosty-bridge-services/config directory.
 
+##### Infura
+Please, create your own infura and store into below configs. Also, we require it to put into 
+* boosty-bridge-services/chains/server/controllers/apitesting/configs/.test.eth.env for running tests
+* boosty-bridge-services/internal/contracts/evm/client/client_test.go: 46 line for running tests
+* boosty-smart-contracts/ethereum/.env.example for deployment 
+
 .env
 ```
 BRIDGE_ADDRESS=localhost:10003
