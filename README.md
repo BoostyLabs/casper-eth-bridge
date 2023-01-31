@@ -564,4 +564,4 @@ For example, if you want to view dozzle over port 4040 then you would do -p 4040
 
 ## How to start locally
 
-[Install documentation](https://github.com/BoostyLabs/golden-gate/INSTALL.md).
+[Install documentation](https://github.com/BoostyLabs/casper-eth-bridge/blob/main/INSTALL.md).
