@@ -1,8 +1,9 @@
-module github.com/BoostyLabs/golden-gate-communication/go-gen
+module github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen
 
 go 1.18
 
 require (
+	github.com/BoostyLabs/golden-gate-communication/go-gen v0.0.0-20230227130143-3efdf854cd94
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
 )
