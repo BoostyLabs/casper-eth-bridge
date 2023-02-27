@@ -1,1 +1,0 @@
-SELECT COUNT(*) as total_value FROM token_transfers as tt WHERE tt.sender_network_id = $1 AND tt.sender_address = $2

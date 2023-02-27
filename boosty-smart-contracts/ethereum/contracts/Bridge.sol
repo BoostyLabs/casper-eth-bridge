@@ -6,16 +6,25 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./signature/SignatureVerify.sol";
+import "./Errors.sol";
 
 contract Bridge is SignatureVerify, Ownable, Pausable {
     using SafeERC20 for IERC20;
 
-    uint16 public constant HUNDRED_PERCENT = 10_000;
+    uint16 private constant HUNDRED_PERCENT = 10_000;
     uint256 private _stableCommissionPercent = 4_00;
 
     mapping(uint256 => bool) private _usedNonces;
     mapping(address => uint256) private _commissionPools;
 
+    /// @param sender address who deposit tokens to the bridge
+    /// @param nonce classic nonce parameter to track unique transaction
+    /// @param token token we deposit to the bridge
+    /// @param amount amount of this token
+    /// @param stableCommissionPercent Commission percent which is actual on the moment when this event fired.
+    /// @param gasCommission Gas commission on the destination chain which is actual on the moment when this event fired.
+    /// @param destinationChain From what chain we transfer to the recipient 
+    /// @param destinationAddress From what address(in the chain mentioned above) we transfer to the recipient
     event BridgeFundsIn(
         address indexed sender,
         uint256 indexed nonce,
@@ -27,6 +36,12 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         string destinationAddress
     );
 
+    /// @param recipient recepient of the tokens
+    /// @param token token we fund out from the bridge
+    /// @param amount amount of this token
+    /// @param transactionId heper parameter to track
+    /// @param sourceChain From what chain we transfer to the recipient 
+    /// @param sourceAddress From what address(in the chain mentioned above) we transfer to the recipient
     event BridgeFundsOut(
         address indexed recipient,
         address token,
@@ -36,6 +51,10 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         string sourceAddress
     );
 
+    /// @param recipient recepient of the tokens (user who transfer his tokens out)
+    /// @param nonce classic nonce parameter to track unique transaction
+    /// @param token token we fund out from the bridge
+    /// @param amount amount of this token
     event TransferOut(
         address indexed recipient,
         uint256 indexed nonce,
@@ -43,6 +62,8 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         uint256 amount
     );
 
+    /// @param token token we withdraw from the commission pool
+    /// @param amount amount of this token
     event WithdrawCommission (
         address indexed token,
         uint256 amount
@@ -50,36 +71,43 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
 
     constructor(address signer) SignatureVerify(signer) {}
 
-    /// @notice Deposit tokens to the bridge to transfer it to another chain
+    /// @notice Deposit tokens on the bridge to transfer them onto another chain
     /// @param token Token address
     /// @param amount Token amount
     /// @param gasCommission Commission which is calculated in transferred token.
     /// @param destinationChain Chain where we transfer tokens
     /// @param destinationAddress Address where we transfer tokens on the chain mentioned above
     /// @param deadline Timestamp until transaction is valid
-    /// @param nonce Parameter to avoid double transaction attack
+    /// @param nonce Parameter to avoid repeat transaction attack
     /// @param signature Classic signature
+    /// @dev Under the hood we check transaction nonce and deadline
     function bridgeIn(
-        address token, // vvvcheck
-        uint256 amount, // vvvcheck
-        uint256 gasCommission, // 200
-        string calldata destinationChain, // vvvcheck
+        address token,
+        uint256 amount,
+        uint256 gasCommission,
+        string calldata destinationChain,
         string calldata destinationAddress,
         uint256 deadline, 
         uint256 nonce,
         bytes calldata signature
     ) external whenNotPaused {
+        uint256 totalCommission = getTotalCommission(amount, gasCommission);
+
+        if (totalCommission >= amount) {
+            revert(Errors.COMMISSION_GREATER_THAN_AMOUNT);
+        }
 
         if (_usedNonces[nonce]) {
-            revert Errors.AlreadyUsedSignature();
+            revert(Errors.ALREADY_USED_SIGNATURE);
         }
 
         if (block.timestamp > deadline) {
-            revert Errors.ExpiredSignature();
+            revert(Errors.EXPIRED_SIGNATURE);
         }
 
         _checkBridgeInRequest(
             _msgSender(),
+            address(this),
             token,
             amount,
             gasCommission,
@@ -92,7 +120,6 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
 
         _usedNonces[nonce] = true;
 
-        uint256 totalCommission = getTotalCommission(amount, gasCommission);
        _commissionPools[token] += totalCommission;
 
 
@@ -114,8 +141,9 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
     /// @param token Token address
     /// @param recipient Recipient address
     /// @param amount Token amount
-    /// @param sourceChain From which chain we transfer to the recipient
-    /// @param sourceAddress From which address we transfer to the recipient
+    /// @param transactionId ID of the transaction - helper parameter
+    /// @param sourceChain From what chain we transfer to the recipient
+    /// @param sourceAddress From what address(in the chain mentioned above) we transfer to the recipient
     function bridgeOut(
         address token,
         address recipient,
@@ -127,7 +155,7 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         uint256 balance = IERC20(token).balanceOf(address(this));
         uint256 allowedBalance = balance - _commissionPools[token];
         if (amount > allowedBalance) {
-            revert Errors.AmountExceedBridgePool();
+            revert(Errors.AMOUNT_EXCEED_BRIDGE_POOL);
         }
         IERC20(token).safeTransfer(recipient, amount);
         emit BridgeFundsOut(
@@ -140,7 +168,8 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         );
     }
 
-    /// @notice Withdraw tokens
+    /// @notice Withdraw commission from the collected pool by the specified token. 
+    /// This way we do not affect user deposits as long as commission pool collected separately
     /// @param token Token address
     /// @param amount Token amount
     function withdrawCommission(
@@ -148,8 +177,9 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         uint256 amount
     ) external onlyOwner {
         if (_commissionPools[token] < amount) {
-            revert Errors.AmountExceedCommissionPool();
+            revert(Errors.AMOUNT_EXCEED_COMMISSION_POOL);
         }
+        _commissionPools[token] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
         emit WithdrawCommission(token, amount);
     }
@@ -157,7 +187,8 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
     /// @notice Allow user to withdraw tokens back if the backend approved it by providing signature
     /// @param token Token address
     /// @param recipient Recipient address
-    /// @param amount Token amount
+    /// @param amount Token amount we should return back to the user
+    /// @param commission Amount of commission we should return back to the user
     /// @param nonce Parameter to avoid double transaction attack
     /// @param signature Classic signature
     function transferOut(
@@ -169,10 +200,17 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         bytes calldata signature
     ) external whenNotPaused {
         if (_usedNonces[nonce]) {
-            revert Errors.AlreadyUsedSignature();
+            revert(Errors.ALREADY_USED_SIGNATURE);
         }
 
-        _checkTransferOutRequest(token, recipient, amount, commission, nonce, signature);
+        _checkTransferOutRequest(
+            address(this), token,
+            recipient,
+            amount,
+            commission,
+            nonce,
+            signature
+        );
 
         _usedNonces[nonce] = true;
         _commissionPools[token] -= commission;
@@ -184,7 +222,7 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         emit TransferOut(recipient, nonce, token, totalSumForTransfer);
     }
 
-    /// @notice Set stable commission percent. Allowed only for onwer
+    /// @notice Set stable commission percent which is used to calculate static commission Allowed only for onwer
     /// @param stableCommissionPercent_ percent
     function setStableCommissionPercent(
         uint256 stableCommissionPercent_
@@ -202,21 +240,23 @@ contract Bridge is SignatureVerify, Ownable, Pausable {
         _unpause();
     }
 
-    /// @notice Get gasCommission percent. 
+    /// @notice Get stable commission percent which is used to calculate static commission
     /// @return stable commission percent
     function getStableCommissionPercent() external view returns(uint256) {
         return _stableCommissionPercent;
     }
 
-    /// @notice Get amount in pool. 
-    /// @return amount in commission pool
+    /// @notice Get amount of collected commission by the specified token.
+    /// @param token Specified token 
+    /// @return amount of collected commission
     function getCommissionPoolAmount(address token) external view onlyOwner returns(uint256) {
         return _commissionPools[token];
     }
 
-    /// @notice Claculate total gasCommission
+    /// @notice Claculate total commission: stable commission percent + gasCommission
     /// @param amount Token amount
     /// @param gasCommission Manual gasCommission
+    /// @return total commission user should pay for transfer
     function getTotalCommission(
         uint256 amount,
         uint256 gasCommission

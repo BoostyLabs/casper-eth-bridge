@@ -1,39 +1,583 @@
-# Bridge Core
+This project facilitate communication between blockchains through the transfer of information and assets.
+It consists of multiple modular swap-in components and supports an increasing number of composable applications built by numerous teams.
 
-This repository contains the "Core" component of Boosty Bridge, which serves as an orchestrator for the bridging process.
 
-The primary crate here is located in `poc/bridge-core`, which is the binary that sets up a server that connects to "Connectors" and provides a gRPC interface for querying.
 
-## Bridge Architecture
+### Architecture overview
 
-The Core tracks the state of all connected networks and all current and completed transactions. It is responsible for processing network events, which it receives from the Connectors, and responds to these events by instructing corresponding Connectors to issue a transaction on the destination chain.
+![](./assets/readme/arch.png)
 
-A "Connector" in this context is a stateless gRPC service that provides a unified, blockchain-agnostic interface to a particular network. This allows for Connectors to be written in whatever language is most convenient, and avoids dependency issues in the Core itself. This also decouples the Core process from Connector processes, meaning that if a Connector goes down, the Core continues to function and provide services on other networks, while the downed Connector recovers.
+#### **Off-Chain components:**
 
-The gRPC API provided by Connectors is described here: https://github.com/BoostyLabs/golden-gate-communication/blob/master/proto/bridge-connector/bridge-connector.proto
+- **Bridge**: communication mediator between all other microservices. Orchestrator of our centralized monolith. Also Bridge is responsible for saving transactions to database.
 
-The Connector exposes to the Core some basic metadata about the network it's connected to, including a unique network id (NID), a network type (currently, Casper or EVM) which dictates the address and signature formats, as well as the network name. The Core is provided with a list of Connectors to use upon startup, and it will internally register each network and then call the `EventStream` method to begin processing events from the network.
+- **Connectors**:  each supported blockchain should have smart contract deployed and connector, that will communicate with this smart contract. Main responsibility on connector is to observe FundsIn transaction and send FundsOut.
 
-The Connector will monitor its associated network for smart contract events, convert them into the format expected by the Core, and report them back. It is expected that each event reported by a Connector has reached a high level of finality, either absolute finality or with a high enough probabililty that a rollback is unlikely. The Core trusts the Connectors to correctly monitor and report consensus state. Ideally, each Connector should use a private full node or light client to verify that proper consensus has been reached before reporting an event back to the Core.
+- **Signer**: signs all transactions.
 
-Upon receiving the event, which will usually be a `FundsIn` for inbound transfers, the Core will parse it to determine which destination network to route it to. If the event is well-formed and passes validation checks, the Core will then find the Connector for the destination chain of the transfer, and call the `BridgeOut` method to issue a transaction. A `FundsOut` event is expected to be issued on the destination network when the transaction has been finalized, which signals to the Core that the transfer should be marked as completed.
+- **Gateway**: REST api gateway that allows any frontend to use bridge functionality.
 
-The Core also exposes a gRPC service to query state, and perform some authorized actions on the behalf of a user, such as cancelling a transfer before it has been issued on the destination chain. This gRPC service is accessed by the frontend via a REST API gateway. The endpoints exposed by the Core are described here: https://github.com/BoostyLabs/golden-gate-communication/blob/master/proto/gateway-bridge/gateway-bridge.proto
+#### **On-Chain components:**
 
-The Connectors also provide some other auxiliary methods necessary for full operation of the bridge, such as gas cost estimation and others.
+- **Bridge smart contracts**: Primary ecosystem contracts. These are the contracts which the Connectors observe and which fundamentally allow for cross-chain communication. Each supported blockchain should have such smart contract to be deployed.
 
-Signing transactions is handled via a separate Signer component. It is expected that the Signer service is shielded from external networks, and only accessible to the Core via an internal VPN. The Connectors can then sign transactions using the Core, which proxies the requests to the Signer.
 
-For storage, a PostgreSQL database is used. It tracks the state of current transfers, as well as token metadata for each connected network and some other miscellaneous data. The schema for the database can be found in `poc/bridge-core/src/sql/create_tables.sql`
 
-## Launching
+### Bridge
 
-For a simple setup:
+[documentation](https://github.com/BoostyLabs/golden-gate-bridge#readme)
+
+### Connectors
+
+#### Structure
+
+This folder contains all bridge supported networks and interaction with them, which divided into independent microservices (we call them connectors).
+
+All microservices have generic interface, and every of them implements it.
+
+So networks logic located in network named folders (casper, emv, etc).
+
+Since connectors have the same structure we could define one server implementation, which will cover all needed implementation.
+
+Server you could find in `server` folder.
+
+#### Connectors functionality    
+
+In short, connectors have 3 main tasks: generating signatures, sending  transactions and reading events after them. Connectors do NOT analyze, do NOT store data that comes to send transactions or read from events  after transactions, connectors only convert data into the appropriate  types that are needed to perform actions. The connectors are as  autonomous as possible, that is, having 2 connectors connected to the  bridge, you can already exchange your funds. They are also resistant to  reboots/disconnections from the bridge, because after the restoration of work, they will constantly try to reconnect, and after they succeed,  they will start reading events from the place where we stopped. Also, if the reconnection takes a long time for some reason, the user can cancel the operation at any time and get back the money from the contract for  the deposit. 
+
+Let's take a look on proto file where we could understand general data flow between connector and bridge itself.
+
+    ```protobuf    
+    service Connector {     
+        // Return metadata of the network this connector provides.     
+        rpc Metadata(google.protobuf.Empty) returns (NetworkMetadata);     
+        // Return tokens known by this connector.     
+        rpc KnownTokens(google.protobuf.Empty) returns (ConnectorTokens); 
+        
+        // Initiate event stream from the network.     
+        rpc EventStream(EventsRequest) returns (stream Event);     
+        // Initiate outbound bridge transaction.     
+        rpc BridgeOut(TokenOutRequest) returns (TokenOutResponse);     
+        // Estimate a potential transfer.     
+        rpc EstimateTransfer(EstimateTransferRequest) returns (EstimateTransferResponse);     
+        
+        // Return signature for user to send bridgeIn transaction.     
+        rpc BridgeInSignature(BridgeInSignatureWithNonceRequest) returns (BridgeInSignatureResponse);     
+        // Return signature for user to return funds.     
+        rpc CancelSignature(CancelSignatureRequest) returns (CancelSignatureResponse);    
+    }   
+    ```
+
+#### **EVM connector**
+
+Allows to interact with EVM-compatible blockchains.
+
+Let's go through every method to understand how everything works.   
+
+Some methods are pretty simple, they just takes some values from config,  and put them into output structure, f.e. `Metadata`
+
+##### ReadEvents  
+
+###### Reading old events.    
+
+​    If we start from scratch and client does not have any events we skip reading events.    On the other hand if client already has some events. We will read small chunks would be more appropriate,    because logs reading/parsing is time-consuming operation.    
+   Organization of reading logic looks like this.
+
+```go
+ // readEventsFromBlock reads node events in a given interval of blocks and notifies subscribers.    
+func (service *Service) readEventsFromBlock(ctx context.Context, fromBlock, toBlock uint64) error {    	
+    var lastProcessedBlock = fromBlock    	
+    for {     
+        switch {
+            case lastProcessedBlock < toBlock:
+            err := service.readOldEvents(ctx, lastProcessedBlock, lastProcessedBlock+listeningLimit)     
+            if err != nil {
+                return Error.Wrap(err)
+            }     
+            case lastProcessedBlock >= toBlock:
+                return service.readOldEvents(ctx, lastProcessedBlock, toBlock)     
+                default:     return nil
+        }
+            
+        lastProcessedBlock += listeningLimit
+    }
+}  
+```
+
+parsing events which have been read.
+
+```go 
+for _, log := range logs {     
+    // check is func need to be closed because of app/stream context.     
+    select {
+        case <-service.gctx.Done():
+        	return nil
+        case <-ctx.Done():
+        	return nil
+        default:
+        }
+    event, err := parseLog(service.instance, log, service.config.EventsFundIn, service.config.EventsFundOut)
+    if err != nil {
+        return Error.Wrap(err)
+    }
+    service.Notify(ctx, event)
+}
+```
+
+###### Subscribe brand-new events
+
+ For live events reading we use web-socket  node client, logic is the same as for reading old events, we form  topics, then query, and initiate events streaming from node, new events  will code using channel.
+
+```go
+ topics := make([]common.Hash, 0)
+    topics = append(topics, service.config.EventsFundIn, service.config.EventsFundOut)
+
+    query := ethereum.FilterQuery{
+        Addresses: []common.Address{service.config.BridgeContractAddress},
+        Topics:    [][]common.Hash{topics},
+    }
+
+    logsCh := make(chan types.Log)
+    subscriptions, err := service.wsEthClient.SubscribeFilterLogs(ctx, query, logsCh)
+    if err != nil {
+        return Error.Wrap(err)
+    }
+```
+
+##### Logs parsing
+
+```go
+switch log.Topics[0] {
+	case fundInEventHash:
+		fundIn, err := instance.ParseBridgeFundsIn(log)
+		if err != nil {
+			return chains.EventVariant{}, Error.Wrap(err)
+		}
+
+		txInfo := chains.TransactionInfo{
+			Hash:        fundIn.Raw.TxHash.Bytes(),
+			BlockNumber: fundIn.Raw.BlockNumber,
+			Sender:      fundIn.Raw.Address.Bytes(),
+		}
+
+		event := chains.EventVariant{
+			Type: chains.EventTypeIn,
+			EventFundsIn: chains.EventFundsIn{
+				From: fundIn.Sender.Bytes(),
+				To: networks.Address{
+					NetworkName: fundIn.DestinationChain,
+					Address:     fundIn.DestinationAddress,
+				},
+				Amount: fundIn.Amount.String(),
+				Token:  fundIn.Token.Bytes(),
+				Tx:     txInfo,
+			},
+		}
+
+		return event, nil
+	}
+
 
 ```
-cd poc/bridge-core
-cargo run --bin bridge -- --embed-db --connectors http://127.0.0.1:10001 --connectors http://127.0.0.1:10002
+
+In log object we receive topic of event, and using this topic we could  determine event type, and parse it to generated from smart contract  structure and work with it.
+
+##### Notifying API layer with new events
+
+For notifying we use publisher-subscriber pattern, so when stream initiates we add new subscriber to slice.
+
+```go
+func (service *Service) AddEventSubscriber() chains.EventSubscriber {
+	subscriber := chains.EventSubscriber{
+		ID:         uuid.New(),
+		EventsChan: make(chan chains.EventVariant),
+	}
+
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+	service.eventSubscribers = append(service.eventSubscribers, subscriber)
+
+	return subscriber
+}
 ```
 
-Connectors to networks are expected to be running at local ports `10001` and `10002`. `--embed-db` spins up a simple local PostgreSQL node by itself, this is only for development purposes. The configuration for the database can be found in `poc/bridge-core/src/bin/bridge.rs`, as well as the predefined network metadata.
+Then when new events appear we call `service.Notify` to send new event for all subscribers
 
+```go
+// Notify notifies all subscribers with events.
+func (service *Service) Notify(ctx context.Context, event chains.EventVariant) {
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
+	for _, subscriber := range service.eventSubscribers {
+		select {
+		case <-service.gctx.Done():
+			return
+		case <-ctx.Done():
+			return
+		default:
+			subscriber.NotifyWithEvent(event)
+		}
+	}
+}
+```
+
+#### Casper connector
+
+Casper allows to interact with Casper and Casper-test networks.
+
+##### ReadEvents
+
+###### Reading old events.
+
+If we start from scratch and client does not have any events we skip old reading events. On the other hand if client already has some events -  we will read them by block number. Since Casper has not saved the  history of events for a long time - we read them from blocks.
+
+###### Subscribe brand-new events.
+
+For live events reading we use a simple get request that will broadcast events from node to us
+
+```go
+  var body io.Reader
+	req, err := http.NewRequest(http.MethodGet, service.config.EventNodeAddress, body)
+	if err != nil {
+		return ErrConnector.Wrap(err)
+	}
+
+	resp, err := service.events.Do(req)
+	if err != nil {
+		return ErrConnector.Wrap(err)
+	}
+	
+	for {
+		reader := bufio.NewReader(resp.Body)
+		rawBody, err := reader.ReadBytes('\n')
+		if err != nil {
+			return ErrConnector.Wrap(err)
+		}
+
+		rawBody = []byte(strings.Replace(string(rawBody), "data:", "", 1))
+
+		// parsing.
+		...
+	}
+```
+
+###### Logs parsing
+
+```go
+var eventFunds chains.EventVariant
+	switch eventType {
+	case chains.EventTypeIn.Int():
+		eventFunds = chains.EventVariant{
+			Type: chains.EventType(eventType),
+			EventFundsIn: chains.EventFundsIn{
+				From: userWalletAddress,
+				To: networks.Address{
+					NetworkName: chainName,
+					Address:     chainAddress,
+				},
+				Amount: amountStr,
+				Token:  tokenContractAddress,
+				Tx:     transactionInfo,
+			},
+		}
+	case chains.EventTypeOut.Int():
+		eventFunds = chains.EventVariant{
+			Type: chains.EventType(eventType),
+			EventFundsOut: chains.EventFundsOut{
+				From: networks.Address{
+					NetworkName: chainName,
+					Address:     chainAddress,
+				},
+				To:     userWalletAddress,
+				Amount: amountStr,
+				Token:  tokenContractAddress,
+				Tx:     transactionInfo,
+			},
+		}
+	default:
+		return chains.EventVariant{}, ErrConnector.New("invalid event type")
+	}
+```
+
+In log object we receive type of event, and using this type we could parse it to the desired structure.
+
+###### BridgeOut
+
+It is a method that sends users funds equivalent to what they have  contributed to the selected network. In this method, we convert the  parameters into a type suitable for Casper, and make a transaction from  our system address.
+
+```go
+args := map[string]sdk.Value{
+		"token_contract": {
+			IsOptional:  false,
+			Tag:         types.CLTypeByteArray,
+			StringBytes: hex.EncodeToString(tokenContractBytes),
+		},
+		"amount": {
+			Tag:         types.CLTypeU256,
+			IsOptional:  false,
+			StringBytes: hex.EncodeToString(amountBytes),
+		},
+		"source_chain": {
+			Tag:         types.CLTypeString,
+			IsOptional:  false,
+			StringBytes: hex.EncodeToString(sourceChainBytes),
+		},
+		"source_address": {
+			Tag:         types.CLTypeString,
+			IsOptional:  false,
+			StringBytes: hex.EncodeToString(sourceAddressBytes),
+		},
+		"recipient": {
+			Tag:         types.CLTypeKey,
+			IsOptional:  false,
+			StringBytes: hex.EncodeToString(recipientBytes),
+		},
+	}
+
+	keyOrder := []string{
+		"token_contract",
+		"amount",
+		"source_chain",
+		"source_address",
+		"recipient",
+	}
+	runtimeArgs := sdk.NewRunTimeArgs(args, keyOrder)
+
+	contractHexBytes, err := hex.DecodeString(service.config.BridgeContractPackageHash)
+	if err != nil {
+		return nil, ErrConnector.Wrap(err)
+	}
+
+	var contractHashBytes [32]byte
+	copy(contractHashBytes[:], contractHexBytes)
+	session := sdk.NewStoredContractByHash(contractHashBytes, "bridge_out", *runtimeArgs)
+
+	deploy := sdk.MakeDeploy(deployParams, payment, session)
+
+	data, err := json.Marshal(*deploy)
+	if err != nil {
+		return nil, ErrConnector.Wrap(err)
+	}
+
+	reqSign := chains.SignRequest{
+		NetworkId: networks.TypeCasper,
+		Data:      data,
+	}
+	signature, err := service.bridge.Sign(ctx, reqSign)
+	if err != nil {
+		return nil, ErrConnector.Wrap(err)
+	}
+
+	signatureKeypair := keypair.Signature{
+		Tag:           keypair.KeyTagEd25519,
+		SignatureData: signature,
+	}
+
+	approval := sdk.Approval{
+		Signer:    publicKey,
+		Signature: signatureKeypair,
+	}
+
+	deploy.Approvals = append(deploy.Approvals, approval)
+
+	hash, err := service.casper.PutDeploy(*deploy)
+	if err != nil {
+		return nil, ErrConnector.Wrap(err)
+	}
+
+	txhash, err := hex.DecodeString(hash)
+```
+
+###### Notifying API layer with new events.
+
+For notifying we use publisher-subscriber pattern, so when stream initiates we add new subscriber to slice.
+
+```go
+func (service *Service) AddEventSubscriber() chains.EventSubscriber {
+	subscriber := chains.EventSubscriber{
+		ID:         uuid.New(),
+		EventsChan: make(chan chains.EventVariant),
+	}
+
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+	service.eventSubscribers = append(service.eventSubscribers, subscriber)
+
+	return subscriber
+}
+```
+
+Then when new events appear we call `service.Notify` to send new event for all subscribers
+
+```go
+// Notify notifies all subscribers with events.
+func (service *Service) Notify(ctx context.Context, event chains.EventVariant) {
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
+	for _, subscriber := range service.eventSubscribers {
+		select {
+		case <-service.gctx.Done():
+			return
+		case <-ctx.Done():
+			return
+		default:
+			subscriber.NotifyWithEvent(event)
+		}
+	}
+}
+```
+
+### Gateway
+
+[documentation](https://test.bridge.gateway.ggxchain.io/api/v0/docs/)
+
+### Web 
+
+#### Initial web setup
+
+1. Install node. Current node version: [v18.12.1](https://nodejs.org/ja/blog/release/v18.12.1/).
+2. Install npm. Current npm version: [8.19.2](https://www.npmjs.com/package/npm/v/8.19.2).
+3. Run command `npm ci`. Uses to get and install dependencies only depend on [package-lock.json](https://github.com/BoostyLabs/golden-gate/blob/tp/readme-md/web/bridge/package-lock.json).
+
+#### Commands:
+
+1. `npm run build` - runs app with [vite.config.js](https://github.com/BoostyLabs/golden-gate/blob/tp/readme-md/web/bridge/vite.config.js) on 'production' mode on [localhost](http://localhost:8089). Builds the app for production to the `dist` folder. It correctly bundles React in production mode and optimizes the build for the best performance. Also automaticaly runs style lint rules with [.stylelintrc config](https://github.com/BoostyLabs/golden-gate/blob/tp/readme-md/web/bridge/.stylelintrc).
+2. `npm run dev` - runs app with [vite.config.js](https://github.com/BoostyLabs/golden-gate/blob/tp/readme-md/web/bridge/vite.config.js) on 'development' mode. Builds the app for development to the `dist` folder. Faster that build but much larger size. Also contains 'watch'  development mode. Automatically rebuilds app when code is changed. Runs  on [localhost](http://localhost:8089).
+3. `npm run lint` - runs eslint [.eslintrc config](https://github.com/BoostyLabs/golden-gate/blob/tp/readme-md/web/bridge/.eslintrc) and stylelint [.stylelintrc config](https://github.com/BoostyLabs/golden-gate/blob/tp/readme-md/web/bridge/.stylelintrc) checks.
+4. `npm run test` - runs coverage code tests with [jest.config.js](https://github.com/BoostyLabs/golden-gate/blob/tp/readme-md/web/bridge/jest.config.js) config.
+
+#### Bundler:
+
+**Vite** is a build tool that aims to provide a faster and leaner development experience for modern web projects.
+
+- On demand file serving over native ESM, no bundling required!
+- Hot Module Replacement (HMR) that stays fast regardless of app size.
+- Out-of-the-box support for TypeScript, JSX, CSS and more.
+- Pre-configured Rollup build with multi-page and library mode support.
+- Rollup-superset plugin interface shared between dev and build.
+- Flexible programmatic APIs with full TypeScript typing.
+
+#### Structure
+
+1. **casper, ethers, networks, phantom, transfers, wallets** - domain entities.
+    Each folder contains domain entities and services.
+    Each entity service serves and calls *API http* requests.
+2. **api**: holds entities *API http* clients.
+    APIClient is base client that holds http client and errors handler.
+3. **private**: *http* client implementation (Custom wrapper around fetch *API*).
+    Holds *DELETE*, *GET*, *PATCH*, *POST*, *PUT* methods for *JSON*.
+4. **app** contains web UI:
+
+- **components**: holds UI components
+- **configs**: UI constants
+- **hooks**: contains custom functions to display UI logic
+- **internal**: holds custom functions to change views variables
+- **plugins**: contains notifications system
+- **routes**: routes config implementation
+- **static**: contains project animation/fonts/images/styles
+- **store**: redux state store
+- **views**: holds UI routes pages.
+
+#### Dependencies
+
+- **@metamask/onboarding**: uses to help onboard new MetaMask users. Allows to ask the MetaMask extension to redirect users back to  page after onboarding has finished
+- **casper-js-sdk**: uses to implementation specific JS clients to support interaction with the Casper contracts
+- **ethers**: complete Ethereum wallet implementation and utilities
+- **react-toastify**: uses to implement notifications
+- **redux-thunk**: redux middleware
+
+### Flow
+
+##### **Step 1:** 
+
+1. Connect wallet 
+2. Choose chain 
+3. Enter Token Amount 
+4. Enter destination wallet address 
+
+![](./assets/readme/step1.png)
+
+##### **Step 2:** 
+
+1. Double check transaction information
+2. Confirm or cancel transaction 
+
+![](./assets/readme/step2.png)
+
+**Step 3:** 
+
+Sign transaction in your wallet and go to transaction history and check status. 
+
+![](./assets/readme/step3.png)
+
+### Deployment architecture
+
+#### Links
+
+[Bridge](https://test.bridge.ggxchain.io/)
+
+[Logs](http://142.93.173.38:9999/)
+
+#### Repositories
+
+[Golden-gate](https://github.com/BoostyLabs/golden-gate)
+
+[Golden-gate-bridge](https://github.com/BoostyLabs/golden-gate-bridge)
+
+#### Solution
+
+To make deployment independent of cloud providers, use containerization  through docker images. That could be runnable on any server, as result  we could switch between providers whenever we want without changing the  deployment process.
+
+#### File locations
+
+All docker files should locate in **${projectname}/deploy** directory. For each service, at the project, write a separate docker file.
+
+#### Naming
+
+According to docker  files naming convention, it should have name of service before dot (ex.: signer.Dockerfile, projectname.Dockerfile).
+
+If the project has several docker-compose files, these files should also  have naming according to docker files naming convention  (docker-compose.test.yml, docker-compose.local.yml).
+
+#### Deployment
+
+For deployment use GitHub actions that trigger commands from Makefile.  It will build docker images (with commit hash and latest), and it will  be pushed to our docker registry. Images from docker registry will use  on deployment server in docker-compose file.
+
+#### Rollback to particular version
+
+On deployment part, create docker image with name that contains commit  hash (docker-registry-address/service-name:commit-hash), as result we  could rollback to particular version whenever we want.
+
+#### Access to logs
+
+For access to logs, we use [Dozzle](https://dozzle.dev/). 
+
+It running as a separate service in docker-compose. 
+
+To create login  & password - pass as environment variables to docker-compose and  provide credentials to QA and Devs. 
+
+So that they have easy and fast  access to logs.
+
+Dozzle will be available at http://${SERVER_IP}:9999. You can change -p  9999:8080 to any port. 
+
+For example, if you want to view dozzle over port 4040 then you would do -p 4040:8080.
+
+### How to start locally
+
+[Install documentation](https://github.com/BoostyLabs/tricorn/blob/dev/INSTALL.md).
+
+### Versioning
+![](./assets/readme/SemanticVersioning.png)
+
+* MAJOR version when you make incompatible API changes 
+* MINOR version when you add functionality in a backwards compatible manner
+* PATCH version when you make backwards compatible bug fixes
+
+Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+
+Example:
+
+* 1.0.0-alpha
+* 1.0.0-beta
+
+For details read more [here](https://semver.org/).

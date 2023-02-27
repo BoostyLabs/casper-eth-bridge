@@ -1,73 +1,113 @@
-name: CI
+name: "CI"
 
 on:
   push:
     branches:
       - 'master'
+      - 'dev'
+      - 'test'
   pull_request:
     branches:
       - 'master'
+      - 'dev'
+      - 'test'
 
 env:
-  CARGO_NET_GIT_FETCH_WITH_CLI: true
-  RUST_BACKTRACE: 1
+  GO_VERSION: 1.18
+  NODE_VERSION: 18.x
 
 jobs:
 
-  rust-test:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      console: ${{ steps.filter.outputs.console }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Detect Changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            console:
+              - 'web/bridge/**'              
+
+  test-go:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 1212
+          POSTGRES_DB: boosty_bridge_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Configure git for private modules
+        run: |
+          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+      - name: Check go mod
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod      
+
+      - name: Build
+        run: go install ./...
+
+      - name: Check tests
+        run: go test ./...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3.4.0
+        with:
+          version: latest
+          skip-build-cache: true
+          skip-pkg-cache: true
+
+  test-console:
+    needs: changes
+    if: ${{ needs.changes.outputs.console == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: Update local toolchain
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Configure git for private modules
         run: |
-          rustup update
-          rustup install nightly
-          rustup default nightly
-          rustup component add clippy
-          rustup component add rustfmt
+          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"          
 
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
+      - name: Install
+        run: npm ci
+        working-directory: ./web/bridge
 
-      - name: Toolchain info
-        run: |
-          cargo --version --verbose
-          rustc --version
-          cargo clippy --version
-          protoc --version
+      - name: Lint
+        run: npm run lint
+        working-directory: ./web/bridge
 
-      - name: Lint bridge-core
-        working-directory: ./poc/bridge-core
-        run: |
-          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
-          cargo fmt -- --check
-          cargo clippy -- -D warnings
+      - name: Build
+        run: npm run build
+        working-directory: ./web/bridge
 
-      - name: Bridge-core tests
-        working-directory: ./poc/bridge-core
-        run: |
-          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
-          cargo test --release -- --test-threads 1
-  
-      - name: Lint price-oracle
-        working-directory: ./poc/price-oracle
-        run: |
-          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
-          cargo fmt -- --check
-          cargo clippy -- -D warnings
-
-#
-#     - name: Test bridge-core
-#       working-directory: ./poc/bridge-core
-#       run: |
-#         git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
-#         cargo check
-#         cargo test --all
-#
-#
-#      - name: Build bridge-core
-#        working-directory: ./poc/bridge-core
-#        run: |
-#          git config --global url."https://${{ secrets.GIT_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
-#          cargo build --release
+      - name: Test
+        run: npm test
+        working-directory: ./web/bridge

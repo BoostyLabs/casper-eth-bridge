@@ -61,6 +61,7 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 [[package]]
 name = "casper-contract"
 version = "1.4.4"
+source = "git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad2300310587186f16bc4acaef94efcc4fc8f7#06ad2300310587186f16bc4acaef94efcc4fc8f7"
 dependencies = [
  "casper-types",
  "hex_fmt",
@@ -70,6 +71,7 @@ dependencies = [
 [[package]]
 name = "casper-types"
 version = "1.5.0"
+source = "git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad2300310587186f16bc4acaef94efcc4fc8f7#06ad2300310587186f16bc4acaef94efcc4fc8f7"
 dependencies = [
  "base16",
  "base64",

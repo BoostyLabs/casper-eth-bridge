@@ -1,4 +1,4 @@
 set dotenv-load
 
 compile-abi:
-    solc --abi contract/Bridge.sol contract/TestERC20.sol -o contract/abi --overwrite
+    solc --abi contract/Bridge.sol contract/TestToken.sol -o contract/abi --overwrite

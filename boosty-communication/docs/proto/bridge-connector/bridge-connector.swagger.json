@@ -25,198 +25,7 @@
           "format": "int64"
         },
         "address": {
-          "$ref": "#/definitions/golden_gateAddress"
-        }
-      }
-    },
-    "golden_gateAddress": {
-      "type": "object",
-      "properties": {
-        "address": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "golden_gateBridgeInSignatureResponse": {
-      "type": "object",
-      "properties": {
-        "token": {
-          "type": "string",
-          "format": "byte"
-        },
-        "amount": {
-          "type": "string"
-        },
-        "gasCommission": {
-          "type": "string"
-        },
-        "destination": {
-          "$ref": "#/definitions/golden_gateStringNetworkAddress"
-        },
-        "deadline": {
-          "type": "string"
-        },
-        "nonce": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "signature": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "golden_gateCancelSignatureResponse": {
-      "type": "object",
-      "properties": {
-        "signature": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "golden_gateConnectorTokens": {
-      "type": "object",
-      "properties": {
-        "tokens": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ConnectorTokensConnectorToken"
-          }
-        }
-      }
-    },
-    "golden_gateEstimateTransferResponse": {
-      "type": "object",
-      "properties": {
-        "fee": {
-          "type": "string"
-        },
-        "feePercentage": {
-          "type": "string"
-        },
-        "estimatedConfirmation": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "golden_gateEvent": {
-      "type": "object",
-      "properties": {
-        "fundsIn": {
-          "$ref": "#/definitions/golden_gateEventFundsIn"
-        },
-        "fundsOut": {
-          "$ref": "#/definitions/golden_gateEventFundsOut"
-        }
-      }
-    },
-    "golden_gateEventFundsIn": {
-      "type": "object",
-      "properties": {
-        "from": {
-          "$ref": "#/definitions/golden_gateAddress"
-        },
-        "to": {
-          "$ref": "#/definitions/golden_gateStringNetworkAddress"
-        },
-        "amount": {
-          "type": "string"
-        },
-        "token": {
-          "$ref": "#/definitions/golden_gateAddress"
-        },
-        "tx": {
-          "$ref": "#/definitions/golden_gateTransactionInfo"
-        }
-      }
-    },
-    "golden_gateEventFundsOut": {
-      "type": "object",
-      "properties": {
-        "to": {
-          "$ref": "#/definitions/golden_gateAddress"
-        },
-        "from": {
-          "$ref": "#/definitions/golden_gateStringNetworkAddress"
-        },
-        "amount": {
-          "type": "string"
-        },
-        "token": {
-          "$ref": "#/definitions/golden_gateAddress"
-        },
-        "tx": {
-          "$ref": "#/definitions/golden_gateTransactionInfo"
-        }
-      }
-    },
-    "golden_gateNetworkMetadata": {
-      "type": "object",
-      "properties": {
-        "ty": {
-          "$ref": "#/definitions/golden_gateNetworkType"
-        },
-        "id": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "name": {
-          "type": "string"
-        },
-        "node": {
-          "type": "string"
-        },
-        "isTestnet": {
-          "type": "boolean"
-        }
-      }
-    },
-    "golden_gateNetworkType": {
-      "type": "string",
-      "enum": [
-        "NT_EVM",
-        "NT_CASPER",
-        "NT_SOLANA"
-      ],
-      "default": "NT_EVM"
-    },
-    "golden_gateStringNetworkAddress": {
-      "type": "object",
-      "properties": {
-        "networkName": {
-          "type": "string"
-        },
-        "address": {
-          "type": "string"
-        }
-      }
-    },
-    "golden_gateTokenOutResponse": {
-      "type": "object",
-      "properties": {
-        "txhash": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "golden_gateTransactionInfo": {
-      "type": "object",
-      "properties": {
-        "hash": {
-          "type": "string",
-          "format": "byte"
-        },
-        "blocknumber": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "sender": {
-          "type": "string",
-          "format": "byte"
+          "$ref": "#/definitions/tricornAddress"
         }
       }
     },
@@ -246,6 +55,207 @@
         }
       },
       "additionalProperties": {}
+    },
+    "tricornAddress": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "tricornBridgeInSignatureResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "format": "byte"
+        },
+        "amount": {
+          "type": "string"
+        },
+        "gasCommission": {
+          "type": "string"
+        },
+        "destination": {
+          "$ref": "#/definitions/tricornStringNetworkAddress"
+        },
+        "deadline": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "tricornCancelSignatureResponse": {
+      "type": "object",
+      "properties": {
+        "signature": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "tricornConnectorTokens": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ConnectorTokensConnectorToken"
+          }
+        }
+      }
+    },
+    "tricornEstimateTransferResponse": {
+      "type": "object",
+      "properties": {
+        "fee": {
+          "type": "string"
+        },
+        "feePercentage": {
+          "type": "string"
+        },
+        "estimatedConfirmation": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "tricornEvent": {
+      "type": "object",
+      "properties": {
+        "fundsIn": {
+          "$ref": "#/definitions/tricornEventFundsIn"
+        },
+        "fundsOut": {
+          "$ref": "#/definitions/tricornEventFundsOut"
+        }
+      }
+    },
+    "tricornEventFundsIn": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "$ref": "#/definitions/tricornAddress"
+        },
+        "to": {
+          "$ref": "#/definitions/tricornStringNetworkAddress"
+        },
+        "amount": {
+          "type": "string"
+        },
+        "token": {
+          "$ref": "#/definitions/tricornAddress"
+        },
+        "tx": {
+          "$ref": "#/definitions/tricornTransactionInfo"
+        }
+      }
+    },
+    "tricornEventFundsOut": {
+      "type": "object",
+      "properties": {
+        "to": {
+          "$ref": "#/definitions/tricornAddress"
+        },
+        "from": {
+          "$ref": "#/definitions/tricornStringNetworkAddress"
+        },
+        "amount": {
+          "type": "string"
+        },
+        "token": {
+          "$ref": "#/definitions/tricornAddress"
+        },
+        "tx": {
+          "$ref": "#/definitions/tricornTransactionInfo"
+        }
+      }
+    },
+    "tricornNetwork": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/tricornNetworkType"
+        },
+        "isTestnet": {
+          "type": "boolean"
+        },
+        "nodeAddress": {
+          "type": "string"
+        },
+        "tokenContract": {
+          "type": "string"
+        },
+        "bridgeContract": {
+          "type": "string"
+        },
+        "gasLimit": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "tricornNetworkType": {
+      "type": "string",
+      "enum": [
+        "NT_EVM",
+        "NT_CASPER",
+        "NT_SOLANA"
+      ],
+      "default": "NT_EVM"
+    },
+    "tricornStringNetworkAddress": {
+      "type": "object",
+      "properties": {
+        "networkName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "tricornTokenOutResponse": {
+      "type": "object",
+      "properties": {
+        "txhash": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "tricornTransactionInfo": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "format": "byte"
+        },
+        "blocknumber": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "sender": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
     }
   }
 }

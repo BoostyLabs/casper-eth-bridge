@@ -1,0 +1,3 @@
+connectors-common/target
+connectors-common/Cargo.lock
+util/.env

@@ -369,7 +369,7 @@ dependencies = [
  "base16",
  "bincode",
  "casper-hashing",
- "casper-types 1.5.0 (git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad2300310587186f16bc4acaef94efcc4fc8f7)",
+ "casper-types",
  "chrono",
  "datasize",
  "hex-buffer-serde 0.2.2",
@@ -409,7 +409,7 @@ source = "git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad230031058
 dependencies = [
  "base16",
  "blake2",
- "casper-types 1.5.0 (git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad2300310587186f16bc4acaef94efcc4fc8f7)",
+ "casper-types",
  "datasize",
  "hex",
  "hex-buffer-serde 0.3.0",
@@ -435,7 +435,7 @@ dependencies = [
  "casper-execution-engine",
  "casper-hashing",
  "casper-node-macros",
- "casper-types 1.5.0 (git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad2300310587186f16bc4acaef94efcc4fc8f7)",
+ "casper-types",
  "chrono",
  "datasize",
  "derive_more",
@@ -525,30 +525,6 @@ dependencies = [
 [[package]]
 name = "casper-types"
 version = "1.5.0"
-dependencies = [
- "base16",
- "base64",
- "bitflags",
- "blake2",
- "ed25519-dalek",
- "hex",
- "hex_fmt",
- "k256",
- "num",
- "num-derive",
- "num-integer",
- "num-rational 0.4.0",
- "num-traits",
- "rand 0.8.5",
- "serde",
- "serde_bytes",
- "serde_json",
- "uint",
-]
-
-[[package]]
-name = "casper-types"
-version = "1.5.0"
 source = "git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad2300310587186f16bc4acaef94efcc4fc8f7#06ad2300310587186f16bc4acaef94efcc4fc8f7"
 dependencies = [
  "base16",
@@ -587,7 +563,7 @@ dependencies = [
  "casper-execution-engine",
  "casper-hashing",
  "casper-node",
- "casper-types 1.5.0 (git+ssh://git@github.com/ElusiveMori/casper-node.git?rev=06ad2300310587186f16bc4acaef94efcc4fc8f7)",
+ "casper-types",
  "clap 3.1.18",
  "connectors-common",
  "dotenv",
@@ -696,7 +672,7 @@ name = "connectors-common"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "casper-types 1.5.0",
+ "casper-types",
  "primitive-types",
  "serde",
  "thiserror",

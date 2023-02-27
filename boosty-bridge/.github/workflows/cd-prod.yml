@@ -1,0 +1,54 @@
+name: "CD Production Environment"
+env:
+  DOCKER_VERSION : ${{ github.sha }}
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - 'master'
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    if:      ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checks-out
+        uses: actions/checkout@v3
+        with:
+          ref: master
+
+      - name: Setup SSH
+        uses: MrSquaare/ssh-setup-action@v2
+        with:
+          host: github.com
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Login into our docker registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY_HOST }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & push docker images to our PROD server
+        run: make docker VERSION=${{ env.DOCKER_VERSION }} ENVIRONMENT=-prod
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy PROD environment images
+        uses: appleboy/ssh-action@master
+        with:
+          host:       ${{ secrets.SSH_HOST_PROD }}
+          port:       ${{ secrets.SSH_PORT }}
+          username:   ${{ secrets.SSH_USERNAME }}
+          key:        ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.PROJECT_PATH_PROD }}
+            ./deploy.sh

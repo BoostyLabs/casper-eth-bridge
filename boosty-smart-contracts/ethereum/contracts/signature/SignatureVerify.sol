@@ -3,7 +3,6 @@
 pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "../Errors.sol";
 
 contract SignatureVerify {
     address private _signerAddress;
@@ -14,9 +13,10 @@ contract SignatureVerify {
 
     function _checkBridgeInRequest(
         address senderAddress,
+        address contractAddress,
         address token,
         uint256 amount,
-        uint256 commission,
+        uint256 gasCommission,
         string memory destinationChain,
         string memory destinationAddress,
         uint256 deadline,
@@ -28,9 +28,10 @@ contract SignatureVerify {
                 _signerAddress,
                 _hashBridgeIn(
                     senderAddress, 
+                    contractAddress,
                     token,
                     amount, 
-                    commission, 
+                    gasCommission, 
                     destinationChain, 
                     destinationAddress, 
                     deadline, 
@@ -39,11 +40,12 @@ contract SignatureVerify {
                 signature
             )
         ) {
-            revert Errors.InvalidSignature();
+            revert("InvalidSignature");
         }
     }
 
     function _checkTransferOutRequest(
+        address contractAddress,
         address token,
         address recipient,
         uint256 amount,
@@ -54,11 +56,11 @@ contract SignatureVerify {
         if (
             !_verify(
                 _signerAddress,
-                _hashTransferOut(token, recipient, amount, commission, nonce),
+                _hashTransferOut(contractAddress, token, recipient, amount, commission, nonce),
                 signature
             )
         ) {
-            revert Errors.InvalidSignature();
+            revert("InvalidSignature");
         }
     }
 
@@ -72,9 +74,10 @@ contract SignatureVerify {
 
     function _hashBridgeIn(
         address senderAddress,
+        address contractAddress,
         address token,
         uint256 amount,
-        uint256 commission,
+        uint256 gasCommission,
         string memory destinationChain,
         string memory destinationAddress,
         uint256 deadline,
@@ -85,9 +88,10 @@ contract SignatureVerify {
                 keccak256(
                     abi.encodePacked(
                         senderAddress, 
+                        contractAddress,
                         token,
                         amount, 
-                        commission, 
+                        gasCommission, 
                         destinationChain, 
                         destinationAddress, 
                         deadline, 
@@ -98,6 +102,7 @@ contract SignatureVerify {
     }
 
     function _hashTransferOut(
+        address contractAddress,
         address token,
         address recipient,
         uint256 amount,
@@ -106,7 +111,7 @@ contract SignatureVerify {
     ) private pure returns (bytes32) {
         return
             ECDSA.toEthSignedMessageHash(
-                keccak256(abi.encodePacked(token, recipient, amount, commission, nonce))
+                keccak256(abi.encodePacked(contractAddress, token, recipient, amount, commission, nonce))
             );
     }
 }

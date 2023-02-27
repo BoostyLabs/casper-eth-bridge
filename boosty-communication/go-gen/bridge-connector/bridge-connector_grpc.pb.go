@@ -8,8 +8,9 @@ package pb_bridge_connector
 
 import (
 	context "context"
-	connector "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector"
-	transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
+	connector "github.com/BoostyLabs/golden-gate-communication/go-gen/connector"
+	networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
+	transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -26,7 +27,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConnectorClient interface {
 	// Return metadata of the network this connector provides.
-	Metadata(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*connector.NetworkMetadata, error)
+	Network(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*networks.Network, error)
 	// Return tokens known by this connector.
 	KnownTokens(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*connector.ConnectorTokens, error)
 	// Initiate event stream from the network.
@@ -49,9 +50,9 @@ func NewConnectorClient(cc grpc.ClientConnInterface) ConnectorClient {
 	return &connectorClient{cc}
 }
 
-func (c *connectorClient) Metadata(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*connector.NetworkMetadata, error) {
-	out := new(connector.NetworkMetadata)
-	err := c.cc.Invoke(ctx, "/golden_gate.Connector/Metadata", in, out, opts...)
+func (c *connectorClient) Network(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*networks.Network, error) {
+	out := new(networks.Network)
+	err := c.cc.Invoke(ctx, "/tricorn.Connector/Network", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (c *connectorClient) Metadata(ctx context.Context, in *emptypb.Empty, opts 
 
 func (c *connectorClient) KnownTokens(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*connector.ConnectorTokens, error) {
 	out := new(connector.ConnectorTokens)
-	err := c.cc.Invoke(ctx, "/golden_gate.Connector/KnownTokens", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.Connector/KnownTokens", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (c *connectorClient) KnownTokens(ctx context.Context, in *emptypb.Empty, op
 }
 
 func (c *connectorClient) EventStream(ctx context.Context, in *connector.EventsRequest, opts ...grpc.CallOption) (Connector_EventStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Connector_ServiceDesc.Streams[0], "/golden_gate.Connector/EventStream", opts...)
+	stream, err := c.cc.NewStream(ctx, &Connector_ServiceDesc.Streams[0], "/tricorn.Connector/EventStream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +102,7 @@ func (x *connectorEventStreamClient) Recv() (*connector.Event, error) {
 
 func (c *connectorClient) BridgeOut(ctx context.Context, in *connector.TokenOutRequest, opts ...grpc.CallOption) (*connector.TokenOutResponse, error) {
 	out := new(connector.TokenOutResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.Connector/BridgeOut", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.Connector/BridgeOut", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +111,7 @@ func (c *connectorClient) BridgeOut(ctx context.Context, in *connector.TokenOutR
 
 func (c *connectorClient) EstimateTransfer(ctx context.Context, in *transfers.EstimateTransferRequest, opts ...grpc.CallOption) (*transfers.EstimateTransferResponse, error) {
 	out := new(transfers.EstimateTransferResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.Connector/EstimateTransfer", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.Connector/EstimateTransfer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +120,7 @@ func (c *connectorClient) EstimateTransfer(ctx context.Context, in *transfers.Es
 
 func (c *connectorClient) BridgeInSignature(ctx context.Context, in *transfers.BridgeInSignatureWithNonceRequest, opts ...grpc.CallOption) (*transfers.BridgeInSignatureResponse, error) {
 	out := new(transfers.BridgeInSignatureResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.Connector/BridgeInSignature", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.Connector/BridgeInSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +129,7 @@ func (c *connectorClient) BridgeInSignature(ctx context.Context, in *transfers.B
 
 func (c *connectorClient) CancelSignature(ctx context.Context, in *transfers.CancelSignatureRequest, opts ...grpc.CallOption) (*transfers.CancelSignatureResponse, error) {
 	out := new(transfers.CancelSignatureResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.Connector/CancelSignature", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.Connector/CancelSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func (c *connectorClient) CancelSignature(ctx context.Context, in *transfers.Can
 // for forward compatibility
 type ConnectorServer interface {
 	// Return metadata of the network this connector provides.
-	Metadata(context.Context, *emptypb.Empty) (*connector.NetworkMetadata, error)
+	Network(context.Context, *emptypb.Empty) (*networks.Network, error)
 	// Return tokens known by this connector.
 	KnownTokens(context.Context, *emptypb.Empty) (*connector.ConnectorTokens, error)
 	// Initiate event stream from the network.
@@ -159,8 +160,8 @@ type ConnectorServer interface {
 type UnimplementedConnectorServer struct {
 }
 
-func (UnimplementedConnectorServer) Metadata(context.Context, *emptypb.Empty) (*connector.NetworkMetadata, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Metadata not implemented")
+func (UnimplementedConnectorServer) Network(context.Context, *emptypb.Empty) (*networks.Network, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Network not implemented")
 }
 func (UnimplementedConnectorServer) KnownTokens(context.Context, *emptypb.Empty) (*connector.ConnectorTokens, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method KnownTokens not implemented")
@@ -192,20 +193,20 @@ func RegisterConnectorServer(s grpc.ServiceRegistrar, srv ConnectorServer) {
 	s.RegisterService(&Connector_ServiceDesc, srv)
 }
 
-func _Connector_Metadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Connector_Network_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConnectorServer).Metadata(ctx, in)
+		return srv.(ConnectorServer).Network(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.Connector/Metadata",
+		FullMethod: "/tricorn.Connector/Network",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConnectorServer).Metadata(ctx, req.(*emptypb.Empty))
+		return srv.(ConnectorServer).Network(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -220,7 +221,7 @@ func _Connector_KnownTokens_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.Connector/KnownTokens",
+		FullMethod: "/tricorn.Connector/KnownTokens",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConnectorServer).KnownTokens(ctx, req.(*emptypb.Empty))
@@ -259,7 +260,7 @@ func _Connector_BridgeOut_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.Connector/BridgeOut",
+		FullMethod: "/tricorn.Connector/BridgeOut",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConnectorServer).BridgeOut(ctx, req.(*connector.TokenOutRequest))
@@ -277,7 +278,7 @@ func _Connector_EstimateTransfer_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.Connector/EstimateTransfer",
+		FullMethod: "/tricorn.Connector/EstimateTransfer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConnectorServer).EstimateTransfer(ctx, req.(*transfers.EstimateTransferRequest))
@@ -295,7 +296,7 @@ func _Connector_BridgeInSignature_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.Connector/BridgeInSignature",
+		FullMethod: "/tricorn.Connector/BridgeInSignature",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConnectorServer).BridgeInSignature(ctx, req.(*transfers.BridgeInSignatureWithNonceRequest))
@@ -313,7 +314,7 @@ func _Connector_CancelSignature_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.Connector/CancelSignature",
+		FullMethod: "/tricorn.Connector/CancelSignature",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConnectorServer).CancelSignature(ctx, req.(*transfers.CancelSignatureRequest))
@@ -325,12 +326,12 @@ func _Connector_CancelSignature_Handler(srv interface{}, ctx context.Context, de
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Connector_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "golden_gate.Connector",
+	ServiceName: "tricorn.Connector",
 	HandlerType: (*ConnectorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Metadata",
-			Handler:    _Connector_Metadata_Handler,
+			MethodName: "Network",
+			Handler:    _Connector_Network_Handler,
 		},
 		{
 			MethodName: "KnownTokens",

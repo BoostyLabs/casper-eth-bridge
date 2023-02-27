@@ -1,0 +1,21 @@
+[package]
+name = "connectors-common"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["casper", "ethereum"]
+casper = ["dep:casper-types"]
+ethereum = ["dep:primitive-types"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+url = { version = "2.0", features = ["serde"] }
+toml = "0.5.8"
+anyhow = "1.0.0"
+thiserror = "1.0.0"
+tonic = "0.8"
+
+casper-types = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", rev = "06ad2300310587186f16bc4acaef94efcc4fc8f7", optional = true }
+primitive-types = { version = "0.11.1", optional = true }

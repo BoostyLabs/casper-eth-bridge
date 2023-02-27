@@ -22,6 +22,7 @@ use once_cell::unsync::OnceCell;
 pub mod erc20;
 pub mod error;
 pub mod event;
+pub mod signatures;
 
 /// Create a non-Sync static variable accessible safely in a wasm target,
 #[macro_export]

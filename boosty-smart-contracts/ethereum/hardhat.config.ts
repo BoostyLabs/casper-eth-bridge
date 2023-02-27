@@ -35,13 +35,28 @@ export default {
   },
   networks: {
     hardhat: {},
-    goerly: {
+    goerli: {
       url: process.env.GOERLI_URL,
       accounts: [process.env.DEPLOY_KEY],
       //gas: 2100000,
+      gasPrice: 120000000000
     },
     ethereum: {
       url: process.env.MAIN_URL,
+      accounts: [process.env.DEPLOY_KEY],
+    },
+    avax: {
+      url: process.env.AVAX_URL,
+      accounts: [process.env.DEPLOY_KEY],
+      gas: 2100000,
+    },
+    mumbai: {
+      url: process.env.MUMBAI_URL,
+      accounts: [process.env.DEPLOY_KEY],
+      gas: 2100000,
+    },
+    bsc: {
+      url: process.env.BSC_URL,
       accounts: [process.env.DEPLOY_KEY],
     }
   },

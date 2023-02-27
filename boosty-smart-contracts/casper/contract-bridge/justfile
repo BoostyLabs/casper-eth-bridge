@@ -2,6 +2,10 @@ build-contract-release:
     cargo build --release --bin bridge-contract --target wasm32-unknown-unknown --no-default-features --features onchain
     wasm-opt -O4 target/wasm32-unknown-unknown/release/bridge-contract.wasm -o bridge-contract.wasm
 
+build-contract-test:
+    cargo build --release --bin bridge-contract --target wasm32-unknown-unknown --no-default-features --features onchain,test-support
+    cp target/wasm32-unknown-unknown/release/bridge-contract.wasm ./
+
 build-contract-debug:
     cargo build --bin bridge-contract --target wasm32-unknown-unknown --no-default-features --features onchain
 

@@ -1,14 +1,20 @@
 syntax = "proto3";
 
-package golden_gate;
+package tricorn;
 
 import "networks/networks.proto";
 
-option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer;pb_signer";
+option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/signer;pb_signer";
+
+enum DataType {
+  DT_TRANSACTION = 0;
+  DT_SIGNATURE = 1;
+}
 
 message SignRequest {
   NetworkType network_id = 1;
-  bytes data = 2;
+  DataType data_type = 2;
+  bytes data = 3;
 }
 
 message Signature {
