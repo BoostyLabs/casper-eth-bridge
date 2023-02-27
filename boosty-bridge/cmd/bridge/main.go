@@ -40,10 +40,7 @@ type Config struct {
 	DialConfig               rpc.Config
 	SignerServerAddress      string             `env:"SIGNER_SERVER_ADDRESS"`
 	EthServerAddress         string             `env:"ETH_SERVER_ADDRESS"`
-	PolygonServerAddress     string             `env:"POLYGON_SERVER_ADDRESS"`
 	CasperServerAddress      string             `env:"CASPER_SERVER_ADDRESS"`
-	BNBServerAddress         string             `env:"BNB_SERVER_ADDRESS"`
-	AvalancheServerAddress   string             `env:"AVALANCHE_SERVER_ADDRESS"`
 	Database                 string             `env:"DATABASE"`
 	GatewayGrpcServerAddress string             `env:"GATEWAY_GRPC_SERVER_ADDRESS"`
 	BridgeGrpcServerAddress  string             `env:"BRIDGE_GRPC_SERVER_ADDRESS"`
@@ -249,24 +246,6 @@ func cmdSeed(cmd *cobra.Command, args []string) (err error) {
 		return Error.Wrap(err)
 	}
 
-	polygonContractAddress, err := networks.StringToBytes(networks.IDMumbai, "df7021bfb23da6654f09d2779f930c6c8528c281")
-	if err != nil {
-		log.Error("could not decode polygon contract address", Error.Wrap(err))
-		return Error.Wrap(err)
-	}
-
-	bnbContractAddress, err := networks.StringToBytes(networks.IDBNBTest, "87Fa9fabB5E32a3ec720Cd74f7f1f64b8d3C74cc")
-	if err != nil {
-		log.Error("could not decode bnb contract address", Error.Wrap(err))
-		return Error.Wrap(err)
-	}
-
-	avalancheContractAddress, err := networks.StringToBytes(networks.IDAvalancheTest, "DF7021BfB23Da6654f09d2779f930C6C8528c281")
-	if err != nil {
-		log.Error("could not decode avalanche contract address", Error.Wrap(err))
-		return Error.Wrap(err)
-	}
-
 	networkTokes := []networks.NetworkToken{
 		{
 			NetworkID:       networks.IDCasperTest,
@@ -278,24 +257,6 @@ func cmdSeed(cmd *cobra.Command, args []string) (err error) {
 			NetworkID:       networks.IDGoerli,
 			TokenID:         1,
 			ContractAddress: ethContractAddress,
-			Decimals:        18,
-		},
-		{
-			NetworkID:       networks.IDMumbai,
-			TokenID:         1,
-			ContractAddress: polygonContractAddress,
-			Decimals:        18,
-		},
-		{
-			NetworkID:       networks.IDBNBTest,
-			TokenID:         1,
-			ContractAddress: bnbContractAddress,
-			Decimals:        18,
-		},
-		{
-			NetworkID:       networks.IDAvalancheTest,
-			TokenID:         1,
-			ContractAddress: avalancheContractAddress,
 			Decimals:        18,
 		},
 	}
@@ -362,27 +323,6 @@ func connectorsConnect(ctx context.Context, log logger.Logger, service *bridge.S
 			service.AddConnector(ctx, networks.NameGoerli, ethConnector)
 		}
 
-		if !service.IsConnectorConnected(networks.NameMumbai) {
-			var polygonConnector bridge.Connector
-			{ // communication setup.
-				switch config.CommunicationMode {
-				case communication.ModeGRPC:
-					config.DialConfig.ServerAddress = config.PolygonServerAddress
-					comm, err := rpc.New(config.DialConfig, log, false)
-					if err != nil {
-						continue
-					}
-
-					polygonConnector = comm.Connector(ctx)
-				default:
-					comm := mockcommunication.New()
-					polygonConnector = comm.Connector(ctx)
-				}
-			}
-
-			service.AddConnector(ctx, networks.NameMumbai, polygonConnector)
-		}
-
 		if !service.IsConnectorConnected(networks.NameCasperTest) {
 			var casperConnector bridge.Connector
 			{ // communication setup.
@@ -401,46 +341,6 @@ func connectorsConnect(ctx context.Context, log logger.Logger, service *bridge.S
 				}
 			}
 			service.AddConnector(ctx, networks.NameCasperTest, casperConnector)
-		}
-
-		if !service.IsConnectorConnected(networks.NameBNBTest) {
-			var bnbConnector bridge.Connector
-			{ // communication setup.
-				switch config.CommunicationMode {
-				case communication.ModeGRPC:
-					config.DialConfig.ServerAddress = config.BNBServerAddress
-					comm, err := rpc.New(config.DialConfig, log, false)
-					if err != nil {
-						continue
-					}
-
-					bnbConnector = comm.Connector(ctx)
-				default:
-					comm := mockcommunication.New()
-					bnbConnector = comm.Connector(ctx)
-				}
-			}
-			service.AddConnector(ctx, networks.NameBNBTest, bnbConnector)
-		}
-
-		if !service.IsConnectorConnected(networks.NameAvalancheTest) {
-			var avalancheConnector bridge.Connector
-			{ // communication setup.
-				switch config.CommunicationMode {
-				case communication.ModeGRPC:
-					config.DialConfig.ServerAddress = config.AvalancheServerAddress
-					comm, err := rpc.New(config.DialConfig, log, false)
-					if err != nil {
-						continue
-					}
-
-					avalancheConnector = comm.Connector(ctx)
-				default:
-					comm := mockcommunication.New()
-					avalancheConnector = comm.Connector(ctx)
-				}
-			}
-			service.AddConnector(ctx, networks.NameAvalancheTest, avalancheConnector)
 		}
 	}
 }
