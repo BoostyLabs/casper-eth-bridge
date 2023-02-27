@@ -7,8 +7,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	bridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/gateway-bridge"
-	transferspb "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	bridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/gateway-bridge"
+	transferspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 
 	"tricorn/bridge/networks"
 	"tricorn/bridge/transfers"

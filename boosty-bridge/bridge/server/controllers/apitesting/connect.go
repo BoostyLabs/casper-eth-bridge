@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	connectorbridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/connector-bridge"
-	gatewaybridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/gateway-bridge"
+	connectorbridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector-bridge"
+	gatewaybridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/gateway-bridge"
 )
 
 // ConnectToGateway initiates connection with gateway server.

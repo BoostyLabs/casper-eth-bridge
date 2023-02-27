@@ -7,9 +7,9 @@
 package pb_bridge_connector
 
 import (
-	connector "github.com/BoostyLabs/golden-gate-communication/go-gen/connector"
-	networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	connector "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector"
+	networks "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"

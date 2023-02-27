@@ -4,7 +4,7 @@ package tricorn;
 
 import "transfers/transfers.proto";
 
-option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/connector;pb_connector";
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector;pb_connector";
 
 message Address {
     bytes address = 1;

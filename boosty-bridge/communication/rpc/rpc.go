@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 
-	bridgeconnectorpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-connector"
-	bridgeoraclepb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-oracle"
-	bridgesignerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-signer"
-	connectorbridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/connector-bridge"
-	gatewaybridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/gateway-bridge"
+	bridgeconnectorpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-connector"
+	bridgeoraclepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-oracle"
+	bridgesignerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-signer"
+	connectorbridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector-bridge"
+	gatewaybridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/gateway-bridge"
 
 	"tricorn/bridge"
 	"tricorn/bridge/networks"

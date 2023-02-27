@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 import "networks/networks.proto";
 import "transfers/transfers.proto";
 
-option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/gateway-bridge;pb_gateway_bridge";
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/gateway-bridge;pb_gateway_bridge";
 
 service GatewayBridge {
   // Return a list of all networks this bridge is connected to.

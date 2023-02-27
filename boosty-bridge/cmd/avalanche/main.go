@@ -21,7 +21,7 @@ import (
 	"github.com/zeebo/errs"
 	"google.golang.org/grpc"
 
-	bridge_connectorpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-connector"
+	bridge_connectorpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-connector"
 
 	"tricorn"
 	"tricorn/bridge/networks"

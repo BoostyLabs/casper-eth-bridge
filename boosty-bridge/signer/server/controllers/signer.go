@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	bridgesignerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-signer"
-	signerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/signer"
+	bridgesignerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-signer"
+	signerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer"
 
 	"tricorn/bridge/networks"
 	"tricorn/internal/logger"

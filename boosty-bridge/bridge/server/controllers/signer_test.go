@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	networkspb "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	signerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/signer"
+	networkspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	signerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer"
 
 	"tricorn/bridge"
 	"tricorn/bridge/server/controllers/apitesting"

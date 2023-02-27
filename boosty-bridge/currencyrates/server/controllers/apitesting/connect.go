@@ -4,7 +4,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	bridgeoraclepb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-oracle"
+	bridgeoraclepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-oracle"
 )
 
 // ConnectToOracle initiates connection with oracle server.

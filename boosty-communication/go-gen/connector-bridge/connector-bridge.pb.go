@@ -7,7 +7,7 @@
 package pb_connector_bridge
 
 import (
-	signer "github.com/BoostyLabs/golden-gate-communication/go-gen/signer"
+	signer "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

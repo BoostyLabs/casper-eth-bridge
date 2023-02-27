@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	bridgesignerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-signer"
-	networkspb "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	signerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/signer"
+	bridgesignerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-signer"
+	networkspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	signerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer"
 
 	"tricorn/bridge/networks"
 	"tricorn/signer"

@@ -17,8 +17,8 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
-	connectorbridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/connector-bridge"
-	gatewaybridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/gateway-bridge"
+	connectorbridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector-bridge"
+	gatewaybridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/gateway-bridge"
 
 	"tricorn/bridge"
 	"tricorn/bridge/database"

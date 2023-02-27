@@ -4,7 +4,7 @@ package tricorn;
 
 import "signer/signer.proto";
 
-option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-signer;pb_bridge_signer";
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-signer;pb_bridge_signer";
 
 service BridgeSigner {
     // Return signed data for specific network.

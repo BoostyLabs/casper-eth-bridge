@@ -5,8 +5,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	bridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/gateway-bridge"
-	networkspb "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
+	bridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/gateway-bridge"
+	networkspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
 
 	"tricorn/bridge/networks"
 	"tricorn/communication"

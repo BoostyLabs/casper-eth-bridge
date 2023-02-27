@@ -8,8 +8,8 @@ package pb_gateway_bridge
 
 import (
 	context "context"
-	networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	networks "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

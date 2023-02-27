@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	transferspb "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	transferspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 
 	"tricorn/bridge/gateway"
 	"tricorn/bridge/gateway/controllers/apitesting"

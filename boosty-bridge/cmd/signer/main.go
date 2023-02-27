@@ -14,7 +14,7 @@ import (
 	"github.com/zeebo/errs"
 	"google.golang.org/grpc"
 
-	bridge_signerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-signer"
+	bridge_signerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-signer"
 
 	"tricorn"
 	"tricorn/internal/config/envparse"
