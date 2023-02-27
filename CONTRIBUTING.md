@@ -29,7 +29,7 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 ## Code of Conduct
 
 This project and everyone participating in it is governed by the
-[Bridge Code of Conduct](https://github.com/BoostyLabs/casper-eth-bridge/main/CODE_OF_CONDUCT.md).
+[Bridge Code of Conduct](https://github.com/BoostyLabs/casper-eth-bridge/blob/main/CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code. Please report unacceptable behavior
 to <>.
 
