@@ -1,4 +1,4 @@
-# Code of Conduct - Ultimate Division
+# Code of Conduct - Bridge
 
 ## Our Pledge
 
