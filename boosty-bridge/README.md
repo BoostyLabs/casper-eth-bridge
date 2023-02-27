@@ -25,8 +25,6 @@ It consists of multiple modular swap-in components and supports an increasing nu
 
 ### Bridge
 
-[documentation](https://github.com/BoostyLabs/golden-gate-bridge#readme)
-
 ### Connectors
 
 #### Structure
@@ -49,8 +47,8 @@ Let's take a look on proto file where we could understand general data flow betw
 
     ```protobuf    
     service Connector {     
-        // Return metadata of the network this connector provides.     
-        rpc Metadata(google.protobuf.Empty) returns (NetworkMetadata);     
+        // Return metadata of the network this connector provides.  
+        rpc Network(google.protobuf.Empty) returns (tricorn.Network);    
         // Return tokens known by this connector.     
         rpc KnownTokens(google.protobuf.Empty) returns (ConnectorTokens); 
         
@@ -516,15 +514,13 @@ Sign transaction in your wallet and go to transaction history and check status.
 
 #### Links
 
-[Bridge](https://test.bridge.ggxchain.io/)
+[Bridge-Web-App](https://dev.bridge.tricorn.network/)
 
-[Logs](http://142.93.173.38:9999/)
+[Logs](https://dev.bridge.tricorn.network/logs)
 
 #### Repositories
 
-[Golden-gate](https://github.com/BoostyLabs/golden-gate)
-
-[Golden-gate-bridge](https://github.com/BoostyLabs/golden-gate-bridge)
+[Bridge](https://github.com/BoostyLabs/casper-eth-bridge)
 
 #### Solution
 

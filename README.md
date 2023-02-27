@@ -516,15 +516,13 @@ Sign transaction in your wallet and go to transaction history and check status.
 
 #### Links
 
-[Bridge](https://test.bridge.ggxchain.io/)
+[Bridge](https://dev.bridge.tricorn.network/)
 
-[Logs](http://142.93.173.38:9999/)
+[Logs](https://dev.bridge.tricorn.network/logs/)
 
 #### Repositories
 
-[Golden-gate](https://github.com/BoostyLabs/golden-gate)
-
-[Golden-gate-bridge](https://github.com/BoostyLabs/golden-gate-bridge)
+[Tricorn](https://github.com/BoostyLabs/tricorn)
 
 #### Solution
 
