@@ -8,7 +8,7 @@ package pb_bridge_signer
 
 import (
 	context "context"
-	signer "github.com/BoostyLabs/golden-gate-communication/go-gen/signer"
+	signer "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

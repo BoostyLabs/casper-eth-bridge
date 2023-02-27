@@ -13,9 +13,9 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	gatewaybridgepb "github.com/BoostyLabs/golden-gate-communication/go-gen/gateway-bridge"
-	networkspb "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	transferspb "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	gatewaybridgepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/gateway-bridge"
+	networkspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	transferspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 
 	"tricorn/bridge"
 	"tricorn/bridge/networks"

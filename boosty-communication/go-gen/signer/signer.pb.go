@@ -7,7 +7,7 @@
 package pb_signer
 
 import (
-	networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
+	networks "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

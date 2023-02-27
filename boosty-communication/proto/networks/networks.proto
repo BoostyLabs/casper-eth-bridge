@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package tricorn;
 
-option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/networks;pb_networks";
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks;pb_networks";
 
 enum NetworkType {
     NT_EVM = 0;

@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	pb_networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	pb_transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	pb_networks "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	pb_transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 
 	"tricorn/bridge"
 	"tricorn/bridge/networks"

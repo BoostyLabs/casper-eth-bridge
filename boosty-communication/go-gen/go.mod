@@ -1,4 +1,4 @@
-module github.com/BoostyLabs/golden-gate-communication/go-gen
+module github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen
 
 go 1.18
 

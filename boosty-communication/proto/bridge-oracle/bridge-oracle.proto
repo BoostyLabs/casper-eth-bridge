@@ -5,7 +5,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 
-option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-oracle;pb_bridge_oracle";
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-oracle;pb_bridge_oracle";
 
 service BridgeOracle {
     rpc PriceStream(google.protobuf.Empty) returns (stream PriceUpdate);

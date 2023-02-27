@@ -4,7 +4,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	bridgesignerpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-signer"
+	bridgesignerpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-signer"
 )
 
 // ConnectToSigner initiates connection with signer server.

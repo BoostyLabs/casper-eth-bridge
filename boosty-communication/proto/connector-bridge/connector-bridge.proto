@@ -4,7 +4,7 @@ package tricorn;
 
 import "signer/signer.proto";
 
-option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/connector-bridge;pb_connector_bridge";
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector-bridge;pb_connector_bridge";
 
 service ConnectorBridge {
   // Return signed data for specific network.

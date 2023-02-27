@@ -16,8 +16,8 @@ import (
 	"github.com/portto/solana-go-sdk/common"
 	"github.com/stretchr/testify/require"
 
-	pb_networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	pb_signer "github.com/BoostyLabs/golden-gate-communication/go-gen/signer"
+	pb_networks "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	pb_signer "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer"
 
 	"tricorn/bridge/networks"
 	"tricorn/internal/config/envparse"

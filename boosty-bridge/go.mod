@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/BoostyLabs/evmsignature v0.0.0-20220607084200-3e6bbbc9a60f
-	github.com/BoostyLabs/golden-gate-communication/go-gen v0.0.0-20230227130143-3efdf854cd94
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/caarlos0/env/v6 v6.10.1

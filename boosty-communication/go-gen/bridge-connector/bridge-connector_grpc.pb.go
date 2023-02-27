@@ -8,9 +8,9 @@ package pb_bridge_connector
 
 import (
 	context "context"
-	connector "github.com/BoostyLabs/golden-gate-communication/go-gen/connector"
-	networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
-	transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	connector "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector"
+	networks "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
+	transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	bridgeoraclepb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-oracle"
+	bridgeoraclepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-oracle"
 
 	"tricorn/currencyrates"
 	"tricorn/internal/logger"

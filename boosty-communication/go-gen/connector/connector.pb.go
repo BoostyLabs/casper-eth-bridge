@@ -7,7 +7,7 @@
 package pb_connector
 
 import (
-	transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
+	transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

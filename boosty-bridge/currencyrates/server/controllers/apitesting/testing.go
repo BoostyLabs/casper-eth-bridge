@@ -15,7 +15,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
-	bridge_oraclepb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-oracle"
+	bridge_oraclepb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-oracle"
 
 	"tricorn/currencyrates"
 	"tricorn/currencyrates/chainlink"

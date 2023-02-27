@@ -4,7 +4,7 @@ package tricorn;
 
 import "networks/networks.proto";
 
-option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/signer;pb_signer";
+option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer;pb_signer";
 
 enum DataType {
   DT_TRANSACTION = 0;
