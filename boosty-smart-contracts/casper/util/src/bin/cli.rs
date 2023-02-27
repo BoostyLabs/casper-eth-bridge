@@ -6,6 +6,7 @@ use std::io::Write;
 use anyhow::{anyhow, Context};
 use casper_execution_engine::core::engine_state::ExecutableDeployItem;
 use casper_node::{crypto::AsymmetricKeyExt, rpcs::state::GlobalStateIdentifier};
+use casper_types::{U128, CLValue};
 use casper_types::{
     account::AccountHash,
     bytesrepr::{Bytes, FromBytes},
@@ -71,22 +72,34 @@ enum Command {
         token_contract: String,
         #[clap(short = 'a')]
         amount: String,
-
+        gas_commission: String,
+        deadline: String,
+        nonce: String,
         destination_chain: String,
         destination_address: String,
+        signature: String,
     },
     BridgeOut {
         #[clap(short = 't')]
         token_contract: String,
         #[clap(short = 'a')]
         amount: String,
-
+        transaction_id: String,
         source_chain: String,
         source_address: String,
 
         #[clap(short = 'r')]
         recipieint: String,
     },
+    SetStableCommissionPercent {
+        #[clap(short = 'a')]
+        stable_commission_percent: String,
+    },
+    SetSigner {
+        #[clap(short = 'a')]
+        signer: String,
+    },
+    // GetStableCommissionPercent {},
     DeployEverythingOnLocalnet {
         #[clap(short = 'b')]
         bridge_contract_path: String,
@@ -149,8 +162,12 @@ async fn main() -> anyhow::Result<()> {
         Command::BridgeIn {
             token_contract,
             amount,
+            gas_commission,
+            nonce,
+            deadline,
             destination_chain,
             destination_address,
+            signature,
         } => {
             bridge_transfer_in(
                 &env,
@@ -158,12 +175,17 @@ async fn main() -> anyhow::Result<()> {
                 destination_address,
                 token_contract,
                 amount,
+                gas_commission,
+                deadline,
+                nonce,
+                signature,
             )
             .await?
         }
         Command::BridgeOut {
             token_contract,
             amount,
+            transaction_id,
             source_chain,
             source_address,
             recipieint: recipient,
@@ -174,10 +196,25 @@ async fn main() -> anyhow::Result<()> {
                 source_address,
                 token_contract,
                 amount,
+                transaction_id,
                 recipient,
             )
             .await?
         }
+        Command::SetStableCommissionPercent {
+            stable_commission_percent,
+        } => set_stable_commission_percent(&env, stable_commission_percent).await?,
+        Command::SetSigner { signer } => set_signer(&env, signer).await?,
+        // Command::GetStableCommissionPercent => {
+        //     get_stable_commission_percent(
+        //         &env
+        //     ).await?
+        // }
+        // Command::GetSigner => {
+        //     get_signer(
+        //         &env
+        //     ).await?
+        // }
         Command::DeployEverythingOnLocalnet {
             bridge_contract_path,
             token_contract_path,
@@ -328,12 +365,15 @@ async fn deploy_bridge_contract(env: &CommonEnv, session_code_path: String) -> a
     let session_code = tokio::fs::read(session_code_path)
         .await
         .context("couldn't read session code file")?;
+    let mut args = RuntimeArgs::new();
 
+    args.insert_cl_value("signer", CLValue::from_t("").expect("infallible"));
+    
     let deploy = client.make_simple_deploy(
-        U512::one() * 50_000_000_000u64,
+        U512::one() * 200_000_000_000u64,
         ExecutableDeployItem::ModuleBytes {
             module_bytes: Bytes::from(session_code),
-            args: RuntimeArgs::new(),
+            args: args,
         },
     )?;
 
@@ -353,6 +393,10 @@ async fn bridge_transfer_in(
     destination_address: String,
     token_contract: String,
     amount: String,
+    gas_commission: String,
+    deadline: String,
+    nonce: String,
+    signature: String,
 ) -> anyhow::Result<()> {
     let bridge_env: BridgeEnv = envy::from_env().context("couldn't parse environment")?;
 
@@ -362,14 +406,22 @@ async fn bridge_transfer_in(
         .expect("invalid bridge contract hash");
     let token_contract = client.key_from_str(&token_contract)?;
     let amount = U256::from_dec_str(&amount).context("couldn't parse amount")?;
+    let gas_commission =
+        U256::from_dec_str(&gas_commission).context("couldn't parse gas_commission")?;
+    let deadline = U256::from_dec_str(&deadline).context("couldn't parse deadline")?;
+    let nonce = U128::from_dec_str(&nonce).context("couldn't parse amount")?;
 
     let deploy_hash = client
         .bridge_in(
             bridge_contract,
             token_contract,
             amount,
+            gas_commission,
+            deadline,
+            nonce,
             destination_chain,
             destination_address,
+            signature,
         )
         .await?;
 
@@ -387,6 +439,7 @@ async fn bridge_transfer_out(
     source_address: String,
     token_contract: String,
     amount: String,
+    transaction_id: String,
     recipient: String,
 ) -> anyhow::Result<()> {
     let bridge_env: BridgeEnv = envy::from_env().context("couldn't parse environment")?;
@@ -397,6 +450,8 @@ async fn bridge_transfer_out(
         .expect("invalid bridge contract hash");
     let token_contract = client.key_from_str(&token_contract)?;
     let amount = U256::from_dec_str(&amount).context("couldn't parse amount")?;
+    let transaction_id =
+        U256::from_dec_str(&transaction_id).context("couldn't parse transaction_id")?;
     let recipient = client.key_from_str(&recipient)?;
 
     let deploy_hash = client
@@ -404,10 +459,74 @@ async fn bridge_transfer_out(
             bridge_contract,
             token_contract,
             amount,
+            transaction_id,
             recipient,
             source_chain,
             source_address,
         )
+        .await?;
+
+    println!("{}", json!(deploy_hash));
+    eprintln!("waiting for deploy to be confirmed");
+    client.confirm_deploy(deploy_hash).await?;
+    eprintln!("deploy confirmed");
+
+    Ok(())
+}
+
+async fn set_stable_commission_percent(
+    env: &CommonEnv,
+    stable_commission_percent: String,
+) -> anyhow::Result<()> {
+    let bridge_env: BridgeEnv = envy::from_env().context("couldn't parse environment")?;
+
+    let client = env.make_client()?;
+
+    let bridge_contract = ContractHash::from_formatted_str(bridge_env.bridge_contract_hash())
+        .expect("invalid bridge contract hash");
+    let stable_commission_percent = U256::from_dec_str(&stable_commission_percent)
+        .context("couldn't parse stable_commission_percent")?;
+
+    let deploy_hash = client
+        .set_stable_commission_percent(bridge_contract, stable_commission_percent)
+        .await?;
+
+    println!("{}", json!(deploy_hash));
+    eprintln!("waiting for deploy to be confirmed");
+    client.confirm_deploy(deploy_hash).await?;
+    eprintln!("deploy confirmed");
+
+    Ok(())
+}
+
+async fn set_signer(env: &CommonEnv, signer: String) -> anyhow::Result<()> {
+    let bridge_env: BridgeEnv = envy::from_env().context("couldn't parse environment")?;
+
+    let client = env.make_client()?;
+
+    let bridge_contract = ContractHash::from_formatted_str(bridge_env.bridge_contract_hash())
+        .expect("invalid bridge contract hash");
+
+    let deploy_hash = client.set_signer(bridge_contract, signer).await?;
+
+    println!("{}", json!(deploy_hash));
+    eprintln!("waiting for deploy to be confirmed");
+    client.confirm_deploy(deploy_hash).await?;
+    eprintln!("deploy confirmed");
+
+    Ok(())
+}
+async fn get_stable_commission_percent(env: &CommonEnv) -> anyhow::Result<()> {
+    //
+    let bridge_env: BridgeEnv = envy::from_env().context("couldn't parse environment")?;
+
+    let client = env.make_client()?;
+
+    let bridge_contract = ContractHash::from_formatted_str(bridge_env.bridge_contract_hash())
+        .expect("invalid bridge contract hash");
+
+    let deploy_hash = client
+        .get_stable_commission_percent(bridge_contract)
         .await?;
 
     println!("{}", json!(deploy_hash));
@@ -468,7 +587,7 @@ async fn deploy_everything_on_localnet(
 
             println!("Converting token contrach hash to contract package hash");
 
-            let token_package_hash = client
+            client
                 .query_global_state(
                     GlobalStateIdentifier::StateRootHash(state),
                     token_key,
@@ -477,12 +596,6 @@ async fn deploy_everything_on_localnet(
                 .await?;
 
             println!("Token package hash received, parsing");
-            let token_package_hash =
-                if let StoredValue::Contract(contract) = token_package_hash.stored_value {
-                    contract.contract_package_hash()
-                } else {
-                    anyhow::bail!("couldn't get token contract")
-                };
 
             let config = ConnectorConfig {
                 url: Url::parse("http://localhost:11101")?,

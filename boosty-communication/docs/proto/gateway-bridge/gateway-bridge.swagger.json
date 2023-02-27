@@ -17,24 +17,6 @@
   ],
   "paths": {},
   "definitions": {
-    "ConnectedNetworksResponseNetwork": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "name": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/golden_gateNetworkType"
-        },
-        "isTestnet": {
-          "type": "boolean"
-        }
-      }
-    },
     "TokensResponseToken": {
       "type": "object",
       "properties": {
@@ -83,19 +65,19 @@
           "type": "string"
         },
         "sender": {
-          "$ref": "#/definitions/golden_gateStringNetworkAddress"
+          "$ref": "#/definitions/tricornStringNetworkAddress"
         },
         "recipient": {
-          "$ref": "#/definitions/golden_gateStringNetworkAddress"
+          "$ref": "#/definitions/tricornStringNetworkAddress"
         },
         "status": {
-          "$ref": "#/definitions/golden_gateTransferResponseStatus"
+          "$ref": "#/definitions/tricornTransferResponseStatus"
         },
         "triggeringTx": {
-          "$ref": "#/definitions/golden_gateStringTxHash"
+          "$ref": "#/definitions/tricornStringTxHash"
         },
         "outboundTx": {
-          "$ref": "#/definitions/golden_gateStringTxHash"
+          "$ref": "#/definitions/tricornStringTxHash"
         },
         "createdAt": {
           "type": "string",
@@ -103,7 +85,34 @@
         }
       }
     },
-    "golden_gateBridgeInSignatureResponse": {
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "tricornBridgeInSignatureResponse": {
       "type": "object",
       "properties": {
         "token": {
@@ -117,7 +126,7 @@
           "type": "string"
         },
         "destination": {
-          "$ref": "#/definitions/golden_gateStringNetworkAddress"
+          "$ref": "#/definitions/tricornStringNetworkAddress"
         },
         "deadline": {
           "type": "string"
@@ -132,7 +141,7 @@
         }
       }
     },
-    "golden_gateCancelTransferResponse": {
+    "tricornCancelTransferResponse": {
       "type": "object",
       "properties": {
         "status": {
@@ -162,18 +171,18 @@
         }
       }
     },
-    "golden_gateConnectedNetworksResponse": {
+    "tricornConnectedNetworksResponse": {
       "type": "object",
       "properties": {
         "networks": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ConnectedNetworksResponseNetwork"
+            "$ref": "#/definitions/tricornNetwork"
           }
         }
       }
     },
-    "golden_gateEstimateTransferResponse": {
+    "tricornEstimateTransferResponse": {
       "type": "object",
       "properties": {
         "fee": {
@@ -188,7 +197,38 @@
         }
       }
     },
-    "golden_gateNetworkType": {
+    "tricornNetwork": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/tricornNetworkType"
+        },
+        "isTestnet": {
+          "type": "boolean"
+        },
+        "nodeAddress": {
+          "type": "string"
+        },
+        "tokenContract": {
+          "type": "string"
+        },
+        "bridgeContract": {
+          "type": "string"
+        },
+        "gasLimit": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "tricornNetworkType": {
       "type": "string",
       "enum": [
         "NT_EVM",
@@ -197,7 +237,7 @@
       ],
       "default": "NT_EVM"
     },
-    "golden_gateStringNetworkAddress": {
+    "tricornStringNetworkAddress": {
       "type": "object",
       "properties": {
         "networkName": {
@@ -208,7 +248,7 @@
         }
       }
     },
-    "golden_gateStringTxHash": {
+    "tricornStringTxHash": {
       "type": "object",
       "properties": {
         "networkName": {
@@ -219,7 +259,7 @@
         }
       }
     },
-    "golden_gateTokensResponse": {
+    "tricornTokensResponse": {
       "type": "object",
       "properties": {
         "tokens": {
@@ -230,7 +270,7 @@
         }
       }
     },
-    "golden_gateTransferHistoryResponse": {
+    "tricornTransferHistoryResponse": {
       "type": "object",
       "properties": {
         "statuses": {
@@ -245,7 +285,7 @@
         }
       }
     },
-    "golden_gateTransferResponse": {
+    "tricornTransferResponse": {
       "type": "object",
       "properties": {
         "statuses": {
@@ -256,7 +296,7 @@
         }
       }
     },
-    "golden_gateTransferResponseStatus": {
+    "tricornTransferResponseStatus": {
       "type": "string",
       "enum": [
         "STATUS_UNSPECIFIED",
@@ -266,33 +306,6 @@
         "STATUS_WAITING"
       ],
       "default": "STATUS_UNSPECIFIED"
-    },
-    "googlerpcStatus": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
-        }
-      }
-    },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "@type": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": {}
     }
   }
 }

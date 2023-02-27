@@ -6,6 +6,6 @@ pub enum BridgeCommand {
         source_chain: String,
         source_address: String,
         recipient: String,
-        amount: String,
+        total_sum_for_transfer: String,
     },
 }

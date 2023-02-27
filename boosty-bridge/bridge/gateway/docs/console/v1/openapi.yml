@@ -1,0 +1,559 @@
+openapi: 3.0.2
+info:
+  contact:
+    name: BoostyLabs
+    url: https://boostylabs.com/
+  description: Gateway API description.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  title: Gateway API
+  version: 1.0.0
+servers:
+  - description: Gateway server.
+    url: http://localhost:8088/api/v0
+paths:
+  /networks:
+    get:
+      description: Returns list of supported networks.
+      responses:
+        "200":
+          description: Everything is ok.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                      format: uint32
+                    name:
+                      type: string
+                      example: network_name
+                    type:
+                      type: string
+                      example: network_type
+                    isTestnet:
+                      type: boolean
+                      example: true
+        "500":
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+    summary: Get supported networks.
+  /networks/{network-id}/supported-tokens:
+    get:
+      description: Returns list of supported by the network tokens.
+      parameters:
+        - in: path
+          name: network-id
+          required: true
+          schema:
+            type: number
+          description: network id.
+      responses:
+        "200":
+          description: Everything is ok.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                      format: uint32
+                    shortName:
+                      type: string
+                      example: token_short_name
+                    longName:
+                      type: string
+                      example: token_long_name
+                    wraps:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          networkId:
+                            type: number
+                            format: uint32
+                          smartContractAddress:
+                            type: string
+                            example: smart_contract_address
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+        "500":
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+    summary: Get supported tokens
+  /transfers/history/{signature-hex}/{pub-key-hex}:
+    get:
+      description: Returns paginated list of transfers.
+      parameters:
+        - in: path
+          name: signature-hex
+          required: true
+          schema:
+            type: string
+          description: signature in hex format.
+        - in: path
+          name: pub-key-hex
+          required: true
+          schema:
+            type: string
+          description: public key in hex format.
+        - in: query
+          name: offset
+          required: true
+          schema:
+            type: number
+          description: number of first transfer in page.
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: number
+          description: amount of transfers in page.
+        - in: query
+          name: network-id
+          required: true
+          schema:
+            type: number
+          description: network id.
+      responses:
+        "200":
+          description: Everything is ok.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transfers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                          format: uint64
+                        amount:
+                          type: number
+                          format: bigint
+                        sender:
+                          type: object
+                          properties:
+                            networkName:
+                              type: string
+                              example: sender_network_name
+                            address:
+                              type: string
+                              example: sender_address
+                        recipient:
+                          type: object
+                          properties:
+                            networkName:
+                              type: string
+                              example: recipient_network_name
+                            address:
+                              type: string
+                              example: recipient_address
+                        status:
+                          type: string
+                          example: transfer_status
+                        triggeringTx:
+                          type: object
+                          properties:
+                            networkName:
+                              type: string
+                              example: triggering_network_name
+                            hash:
+                              type: string
+                              example: triggering_transaction_hash
+                        outboundTx:
+                          type: object
+                          properties:
+                            networkName:
+                              type: string
+                              example: triggering_network_name
+                            hash:
+                              type: string
+                              example: triggering_transaction_hash
+                        createdAt:
+                          format: date-time
+                  offset:
+                    type: number
+                    format: int64
+                  limit:
+                    type: number
+                    format: int64
+                  totalCount:
+                    type: number
+                    format: int64
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+        "500":
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+    summary: Get history
+  /transfers/{tx}:
+    get:
+      description: Returns list of transfers of triggering transaction.
+      parameters:
+        - in: path
+          name: tx
+          required: true
+          schema:
+            type: string
+          description: transaction hash in hex format.
+      responses:
+        "200":
+          description: Everything is ok.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                      format: uint64
+                    amount:
+                      type: number
+                      format: bigint
+                    sender:
+                      type: object
+                      properties:
+                        networkName:
+                          type: string
+                          example: sender_network_name
+                        address:
+                          type: string
+                          example: sender_address
+                    recipient:
+                      type: object
+                      properties:
+                        networkName:
+                          type: string
+                          example: recipient_network_name
+                        address:
+                          type: string
+                          example: recipient_address
+                    status:
+                      type: string
+                      example: transfer_status
+                    triggeringTx:
+                      type: object
+                      properties:
+                        networkName:
+                          type: string
+                          example: triggering_network_name
+                        hash:
+                          type: string
+                          example: triggering_transaction_hash
+                    outboundTx:
+                      type: object
+                      properties:
+                        networkName:
+                          type: string
+                          example: triggering_network_name
+                        hash:
+                          type: string
+                          example: triggering_transaction_hash
+                    createdAt:
+                      format: date-time
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+        "500":
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+    summary: Get info
+  /transfers/estimate/{sender-network}/{recipient-network}/{token-id}/{amount}:
+    get:
+      description: Returns approximate information about transfer fee and time.
+      parameters:
+        - in: path
+          name: sender-network
+          required: true
+          schema:
+            type: string
+          description: sender network type.
+        - in: path
+          name: recipient-network
+          required: true
+          schema:
+            type: string
+          description: recipient network type.
+        - in: path
+          name: token-id
+          required: true
+          schema:
+            type: number
+          description: token id.
+        - in: path
+          name: amount
+          required: true
+          schema:
+            type: string
+          description: amount.
+      responses:
+        "200":
+          description: Everything is ok.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fee:
+                    type: string
+                    example: estimated_fee_for_transfer
+                  feePercentage:
+                    type: string
+                    example: fee_percentage
+                  estimatedConfirmationTime:
+                    type: string
+                    example: estimated_confirmation_time
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+        "500":
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+    summary: Estimate transfer
+  /transfers/bridge-in-signature:
+    post:
+      description: BridgeInSignature returns signature for user to send bridgeIn transaction.
+      requestBody:
+        content:
+          application/json:
+           schema:
+             type: object
+             properties:
+               sender:
+                 type: object
+                 properties:
+                   networkName:
+                     type: string
+                     example: sender_network_name
+                   address:
+                     type: string
+                     example: sender_address
+               tokenId:
+                 type: number
+                 format: uint32
+               amount:
+                 type: string
+                 example: amount
+               destination:
+                 type: object
+                 properties:
+                   networkName:
+                     type: string
+                     example: destination_network_name
+                   address:
+                     type: string
+                     example: destination_address
+      responses:
+        "200":
+          description: Everything is ok.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Token:
+                    type: string
+                    format: byte array
+                  Amount:
+                    type: string
+                    example: amount
+                  GasComission:
+                    type: string
+                    example: gas_comission
+                  Destination:
+                    type: object
+                    properties:
+                      networkName:
+                        type: string
+                        example: destination_network_name
+                      address:
+                        type: string
+                        example: destination_address
+                  Deadline:
+                    type: string
+                    example: deadline
+                  Nonce:
+                    type: number
+                    format: uint64
+                  Signature:
+                    type: string
+                    format: byte array
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+        "500":
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+    summary: Get bridgeIn signature
+  /cancel-signature/{transfer-id}/{network-id}/{signature}/{public-key}:
+    get:
+      description: Returns signature to cancel transfer.
+      parameters:
+        - in: path
+          name: transfer-id
+          required: true
+          schema:
+            type: string
+          description: id of transfer.
+        - in: path
+          name: network-id
+          required: true
+          schema:
+            type: number
+          description: id of network.
+        - in: path
+          name: signature
+          required: true
+          schema:
+            type: string
+          description: authentication proof of sender.
+        - in: path
+          name: public-key
+          required: true
+          schema:
+            type: string
+          description: sender's public key.
+      responses:
+        "200":
+          description: Everything is ok.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: status_of_transaction
+                  nonce:
+                    type: string
+                    example: tx_nonce
+                  signature:
+                    type: string
+                    example: signature
+                  token:
+                    type: string
+                    example: token_sm_address
+                  recipient:
+                    type: string
+                    example: address_of_recipient
+                  commission:
+                    type: string
+                    example: 0.04
+                  amount:
+                    type: string
+                    example: 100
+        "400":
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+        "500":
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: error_description
+    summary: Get cancel signature
+components:
+  schemas: {}

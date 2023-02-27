@@ -1,16 +1,10 @@
 syntax = "proto3";
 
-package golden_gate;
+package tricorn;
 
-import "networks/networks.proto";
 import "transfers/transfers.proto";
 
-option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector;pb_connector";
-
-message NetworkAddress {
-    uint32 network_id = 1;
-    bytes address = 2;
-}
+option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/connector;pb_connector";
 
 message Address {
     bytes address = 1;
@@ -18,14 +12,6 @@ message Address {
 
 message StringAddress {
     string address = 1;
-}
-
-message NetworkMetadata {
-    NetworkType ty = 1;
-    uint32 id = 2;
-    string name = 3;
-    string node = 4;
-    bool is_testnet = 5;
 }
 
 message EventsRequest {

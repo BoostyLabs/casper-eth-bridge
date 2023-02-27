@@ -8,7 +8,7 @@ package pb_bridge_signer
 
 import (
 	context "context"
-	signer "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/signer"
+	signer "github.com/BoostyLabs/golden-gate-communication/go-gen/signer"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -39,7 +39,7 @@ func NewBridgeSignerClient(cc grpc.ClientConnInterface) BridgeSignerClient {
 
 func (c *bridgeSignerClient) Sign(ctx context.Context, in *signer.SignRequest, opts ...grpc.CallOption) (*signer.Signature, error) {
 	out := new(signer.Signature)
-	err := c.cc.Invoke(ctx, "/golden_gate.BridgeSigner/Sign", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.BridgeSigner/Sign", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (c *bridgeSignerClient) Sign(ctx context.Context, in *signer.SignRequest, o
 
 func (c *bridgeSignerClient) PublicKey(ctx context.Context, in *signer.PublicKeyRequest, opts ...grpc.CallOption) (*signer.PublicKeyResponse, error) {
 	out := new(signer.PublicKeyResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.BridgeSigner/PublicKey", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.BridgeSigner/PublicKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func _BridgeSigner_Sign_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.BridgeSigner/Sign",
+		FullMethod: "/tricorn.BridgeSigner/Sign",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BridgeSignerServer).Sign(ctx, req.(*signer.SignRequest))
@@ -115,7 +115,7 @@ func _BridgeSigner_PublicKey_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.BridgeSigner/PublicKey",
+		FullMethod: "/tricorn.BridgeSigner/PublicKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BridgeSignerServer).PublicKey(ctx, req.(*signer.PublicKeyRequest))
@@ -127,7 +127,7 @@ func _BridgeSigner_PublicKey_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var BridgeSigner_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "golden_gate.BridgeSigner",
+	ServiceName: "tricorn.BridgeSigner",
 	HandlerType: (*BridgeSignerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

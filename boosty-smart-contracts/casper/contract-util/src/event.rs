@@ -3,7 +3,7 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{
-    bytesrepr::{FromBytes, ToBytes},
+    bytesrepr::{Bytes, FromBytes, ToBytes},
     contracts::NamedKeys,
     Key, URef,
 };
@@ -27,7 +27,7 @@ mod trigger_cache {
 }
 
 pub fn install(named_keys: &mut NamedKeys) {
-    let event_trigger_uref = new_uref(());
+    let event_trigger_uref = new_uref(Bytes::new());
 
     named_keys.insert(
         EVENT_TRIGGER_UREF_NAME.into(),

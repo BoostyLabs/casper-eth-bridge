@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package golden_gate;
+package tricorn;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers;pb_transfers";
+option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers;pb_transfers";
 
 message StringNetworkAddress {
     string network_name = 1;

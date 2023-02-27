@@ -8,8 +8,8 @@ package pb_gateway_bridge
 
 import (
 	context "context"
-	networks "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
-	transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
+	networks "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
+	transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -51,7 +51,7 @@ func NewGatewayBridgeClient(cc grpc.ClientConnInterface) GatewayBridgeClient {
 
 func (c *gatewayBridgeClient) ConnectedNetworks(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*networks.ConnectedNetworksResponse, error) {
 	out := new(networks.ConnectedNetworksResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.GatewayBridge/ConnectedNetworks", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.GatewayBridge/ConnectedNetworks", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *gatewayBridgeClient) ConnectedNetworks(ctx context.Context, in *emptypb
 
 func (c *gatewayBridgeClient) SupportedTokens(ctx context.Context, in *networks.SupportedTokensRequest, opts ...grpc.CallOption) (*networks.TokensResponse, error) {
 	out := new(networks.TokensResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.GatewayBridge/SupportedTokens", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.GatewayBridge/SupportedTokens", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *gatewayBridgeClient) SupportedTokens(ctx context.Context, in *networks.
 
 func (c *gatewayBridgeClient) EstimateTransfer(ctx context.Context, in *transfers.EstimateTransferRequest, opts ...grpc.CallOption) (*transfers.EstimateTransferResponse, error) {
 	out := new(transfers.EstimateTransferResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.GatewayBridge/EstimateTransfer", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.GatewayBridge/EstimateTransfer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c *gatewayBridgeClient) EstimateTransfer(ctx context.Context, in *transfer
 
 func (c *gatewayBridgeClient) Transfer(ctx context.Context, in *transfers.TransferRequest, opts ...grpc.CallOption) (*transfers.TransferResponse, error) {
 	out := new(transfers.TransferResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.GatewayBridge/Transfer", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.GatewayBridge/Transfer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (c *gatewayBridgeClient) Transfer(ctx context.Context, in *transfers.Transf
 
 func (c *gatewayBridgeClient) CancelTransfer(ctx context.Context, in *transfers.CancelTransferRequest, opts ...grpc.CallOption) (*transfers.CancelTransferResponse, error) {
 	out := new(transfers.CancelTransferResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.GatewayBridge/CancelTransfer", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.GatewayBridge/CancelTransfer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (c *gatewayBridgeClient) CancelTransfer(ctx context.Context, in *transfers.
 
 func (c *gatewayBridgeClient) TransferHistory(ctx context.Context, in *transfers.TransferHistoryRequest, opts ...grpc.CallOption) (*transfers.TransferHistoryResponse, error) {
 	out := new(transfers.TransferHistoryResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.GatewayBridge/TransferHistory", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.GatewayBridge/TransferHistory", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (c *gatewayBridgeClient) TransferHistory(ctx context.Context, in *transfers
 
 func (c *gatewayBridgeClient) BridgeInSignature(ctx context.Context, in *transfers.BridgeInSignatureRequest, opts ...grpc.CallOption) (*transfers.BridgeInSignatureResponse, error) {
 	out := new(transfers.BridgeInSignatureResponse)
-	err := c.cc.Invoke(ctx, "/golden_gate.GatewayBridge/BridgeInSignature", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tricorn.GatewayBridge/BridgeInSignature", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func _GatewayBridge_ConnectedNetworks_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.GatewayBridge/ConnectedNetworks",
+		FullMethod: "/tricorn.GatewayBridge/ConnectedNetworks",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayBridgeServer).ConnectedNetworks(ctx, req.(*emptypb.Empty))
@@ -197,7 +197,7 @@ func _GatewayBridge_SupportedTokens_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.GatewayBridge/SupportedTokens",
+		FullMethod: "/tricorn.GatewayBridge/SupportedTokens",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayBridgeServer).SupportedTokens(ctx, req.(*networks.SupportedTokensRequest))
@@ -215,7 +215,7 @@ func _GatewayBridge_EstimateTransfer_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.GatewayBridge/EstimateTransfer",
+		FullMethod: "/tricorn.GatewayBridge/EstimateTransfer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayBridgeServer).EstimateTransfer(ctx, req.(*transfers.EstimateTransferRequest))
@@ -233,7 +233,7 @@ func _GatewayBridge_Transfer_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.GatewayBridge/Transfer",
+		FullMethod: "/tricorn.GatewayBridge/Transfer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayBridgeServer).Transfer(ctx, req.(*transfers.TransferRequest))
@@ -251,7 +251,7 @@ func _GatewayBridge_CancelTransfer_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.GatewayBridge/CancelTransfer",
+		FullMethod: "/tricorn.GatewayBridge/CancelTransfer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayBridgeServer).CancelTransfer(ctx, req.(*transfers.CancelTransferRequest))
@@ -269,7 +269,7 @@ func _GatewayBridge_TransferHistory_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.GatewayBridge/TransferHistory",
+		FullMethod: "/tricorn.GatewayBridge/TransferHistory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayBridgeServer).TransferHistory(ctx, req.(*transfers.TransferHistoryRequest))
@@ -287,7 +287,7 @@ func _GatewayBridge_BridgeInSignature_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/golden_gate.GatewayBridge/BridgeInSignature",
+		FullMethod: "/tricorn.GatewayBridge/BridgeInSignature",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayBridgeServer).BridgeInSignature(ctx, req.(*transfers.BridgeInSignatureRequest))
@@ -299,7 +299,7 @@ func _GatewayBridge_BridgeInSignature_Handler(srv interface{}, ctx context.Conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var GatewayBridge_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "golden_gate.GatewayBridge",
+	ServiceName: "tricorn.GatewayBridge",
 	HandlerType: (*GatewayBridgeServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -1,0 +1,87 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TransactionsHistory view renders correctly 1`] = `
+<div
+  className="transactions-history"
+>
+  <div
+    className="transactions-history__menu"
+  >
+    <div
+      className="transactions-history__menu__switch"
+    />
+  </div>
+  <ul
+    className="transactions-history__filters"
+  >
+    <li
+      className="transactions-history__filters__item"
+    >
+      #
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      From
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      To
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      Destination
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      Amount
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      Time
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      Date
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      State
+    </li>
+    <li
+      className="transactions-history__filters__item"
+    >
+      Action
+    </li>
+  </ul>
+  <ul
+    className="transactions-history__list"
+  >
+    <div
+      className="empty"
+    >
+      <img
+        alt="empty state"
+        className="empty__image"
+        src=""
+      />
+      <h1
+        className="empty__title"
+      >
+        No Data Yet
+      </h1>
+      <span
+        className="empty__description"
+      >
+        There are no transactions associated with the connected wallet yet. Submit a transaction or connect another wallet.
+      </span>
+    </div>
+  </ul>
+</div>
+`;

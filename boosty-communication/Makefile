@@ -16,7 +16,7 @@ golang_protobuf: ## Generates protobuf implementation for Golang.
 	buf generate --path ${PROTO_PATH}/bridge-signer/bridge-signer.proto
 	buf generate --path ${PROTO_PATH}/bridge-connector/bridge-connector.proto
 	buf generate --path ${PROTO_PATH}/connector-bridge/connector-bridge.proto
-
+	buf generate --path ${PROTO_PATH}/bridge-oracle/bridge-oracle.proto
 
 .PHONY: docs
 docs: ## Generates docs for proto-files.
@@ -28,3 +28,4 @@ docs: ## Generates docs for proto-files.
 	protoc -I. -I${PROTO_PATH} --openapiv2_out=${DOCS_PATH} --openapiv2_opt=logtostderr=true ${PROTO_PATH}/bridge-signer/bridge-signer.proto
 	protoc -I. -I${PROTO_PATH} --openapiv2_out=${DOCS_PATH} --openapiv2_opt=logtostderr=true ${PROTO_PATH}/bridge-connector/bridge-connector.proto
 	protoc -I. -I${PROTO_PATH} --openapiv2_out=${DOCS_PATH} --openapiv2_opt=logtostderr=true ${PROTO_PATH}/connector-bridge/connector-bridge.proto
+	protoc -I. -I${PROTO_PATH} --openapiv2_out=${DOCS_PATH} --openapiv2_opt=logtostderr=true ${PROTO_PATH}/bridge-oracle/bridge-oracle.proto

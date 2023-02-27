@@ -9,6 +9,8 @@ casper-contract = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", re
 casper-engine-test-support = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", rev = "06ad2300310587186f16bc4acaef94efcc4fc8f7", features = ["test-support"] }
 casper-execution-engine = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", rev = "06ad2300310587186f16bc4acaef94efcc4fc8f7" }
 casper-types   = { git = "ssh://git@github.com/ElusiveMori/casper-node.git", rev = "06ad2300310587186f16bc4acaef94efcc4fc8f7" }
+k256 = { version = "0.10.4", features = ["pem"] }
+base16 = { version = "0.2.1", default-features = false }
 
 casper-common  = { path = "../casper-common" }
 contract-bridge = { path = "../contract-bridge" }

@@ -17,36 +17,6 @@
   ],
   "paths": {},
   "definitions": {
-    "golden_gateNetworkType": {
-      "type": "string",
-      "enum": [
-        "NT_EVM",
-        "NT_CASPER",
-        "NT_SOLANA"
-      ],
-      "default": "NT_EVM"
-    },
-    "golden_gatePublicKeyResponse": {
-      "type": "object",
-      "properties": {
-        "publicKey": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "golden_gateSignature": {
-      "type": "object",
-      "properties": {
-        "networkId": {
-          "$ref": "#/definitions/golden_gateNetworkType"
-        },
-        "signature": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -71,6 +41,44 @@
           "items": {
             "$ref": "#/definitions/protobufAny"
           }
+        }
+      }
+    },
+    "tricornDataType": {
+      "type": "string",
+      "enum": [
+        "DT_TRANSACTION",
+        "DT_SIGNATURE"
+      ],
+      "default": "DT_TRANSACTION"
+    },
+    "tricornNetworkType": {
+      "type": "string",
+      "enum": [
+        "NT_EVM",
+        "NT_CASPER",
+        "NT_SOLANA"
+      ],
+      "default": "NT_EVM"
+    },
+    "tricornPublicKeyResponse": {
+      "type": "object",
+      "properties": {
+        "publicKey": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "tricornSignature": {
+      "type": "object",
+      "properties": {
+        "networkId": {
+          "$ref": "#/definitions/tricornNetworkType"
+        },
+        "signature": {
+          "type": "string",
+          "format": "byte"
         }
       }
     }

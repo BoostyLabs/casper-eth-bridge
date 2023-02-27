@@ -7,17 +7,15 @@ use casper_node::{
 };
 use casper_types::{
     bytesrepr::{Bytes, FromBytes},
-    ContractHash, DeployHash, ExecutionEffect, ExecutionResult, Key, StoredValue, Transform, URef,
+    ContractHash, DeployHash, ExecutionEffect, ExecutionResult, StoredValue, Transform, URef,
 };
 use casper_util::{
-    bridgectl::BridgeCommand,
     client::CasperClient,
     util::{BridgeEnv, CommonEnv},
 };
 use event::BridgeEvent;
-use futures::{StreamExt, TryStreamExt};
-use tokio::{net::TcpListener, sync::mpsc::Sender};
-use tokio_tungstenite::tungstenite::Message;
+use futures::TryStreamExt;
+use tokio;
 
 #[tokio::main]
 pub async fn main() -> anyhow::Result<()> {
@@ -135,50 +133,10 @@ fn check_deploy_events(
     }
 }
 
-async fn process_cmd(
-    client: &CasperClient,
-    bridge_env: &BridgeEnv,
-    cmd: BridgeCommand,
-) -> anyhow::Result<()> {
-    Ok(())
-}
-
-async fn command_server(cmd_tx: Sender<BridgeCommand>) -> anyhow::Result<()> {
-    let socket = TcpListener::bind("127.0.0.1:4200")
-        .await
-        .expect("failed to bind");
-
-    while let Ok((stream, _)) = socket.accept().await {
-        let cmd_tx = cmd_tx.clone();
-
-        tokio::spawn(async move {
-            let stream = tokio_tungstenite::accept_async(stream)
-                .await
-                .expect("Error during the websocket handshake occurred");
-
-            let (_, rx) = stream.split();
-
-            rx.for_each(|msg| async {
-                if let Ok(msg) = msg {
-                    if let Message::Binary(data) = msg {
-                        let command =
-                            bincode::deserialize::<BridgeCommand>(&data).expect("deser failed");
-
-                        cmd_tx.send(command).await.ok();
-                    }
-                }
-            })
-            .await
-        });
-    }
-
-    Ok(())
-}
-
 mod event {
     use casper_types::{
         bytesrepr::{self, FromBytes, ToBytes},
-        ContractPackageHash, Key, U256,
+        ContractPackageHash, Key, U128, U256,
     };
 
     pub const BRIDGE_EVENT_FUNDS_IN_TAG: u8 = 0;
@@ -191,6 +149,9 @@ mod event {
             destination_chain: String,
             destination_address: String,
             amount: U256,
+            gas_commission: U256,
+            stable_commission_percent: U256,
+            nonce: U128,
             sender: Key,
         },
         FundsOut {
@@ -198,6 +159,7 @@ mod event {
             source_chain: String,
             source_address: String,
             amount: U256,
+            transaction_id: U256,
             recipient: Key,
         },
     }
@@ -212,6 +174,9 @@ mod event {
                     destination_chain,
                     destination_address,
                     amount,
+                    gas_commission,
+                    stable_commission_percent,
+                    nonce,
                     sender,
                 } => {
                     buffer.push(BRIDGE_EVENT_FUNDS_IN_TAG);
@@ -219,6 +184,9 @@ mod event {
                     buffer.extend(destination_chain.to_bytes()?);
                     buffer.extend(destination_address.to_bytes()?);
                     buffer.extend(amount.to_bytes()?);
+                    buffer.extend(gas_commission.to_bytes()?);
+                    buffer.extend(stable_commission_percent.to_bytes()?);
+                    buffer.extend(nonce.to_bytes()?);
                     buffer.extend(sender.to_bytes()?);
                 }
                 BridgeEvent::FundsOut {
@@ -226,6 +194,7 @@ mod event {
                     source_chain,
                     source_address,
                     amount,
+                    transaction_id,
                     recipient,
                 } => {
                     buffer.push(BRIDGE_EVENT_FUNDS_OUT_TAG);
@@ -233,6 +202,7 @@ mod event {
                     buffer.extend(source_chain.to_bytes()?);
                     buffer.extend(source_address.to_bytes()?);
                     buffer.extend(amount.to_bytes()?);
+                    buffer.extend(transaction_id.to_bytes()?);
                     buffer.extend(recipient.to_bytes()?);
                 }
             }
@@ -247,11 +217,17 @@ mod event {
                     destination_chain,
                     destination_address,
                     amount,
+                    gas_commission,
+                    stable_commission_percent,
+                    nonce,
                     sender,
                 } => {
                     destination_chain.serialized_length()
                         + destination_address.serialized_length()
                         + amount.serialized_length()
+                        + gas_commission.serialized_length()
+                        + stable_commission_percent.serialized_length()
+                        + nonce.serialized_length()
                         + sender.serialized_length()
                         + token_contract.serialized_length()
                 }
@@ -260,11 +236,13 @@ mod event {
                     source_chain,
                     source_address,
                     amount,
+                    transaction_id,
                     recipient,
                 } => {
                     source_chain.serialized_length()
                         + source_address.serialized_length()
                         + amount.serialized_length()
+                        + transaction_id.serialized_length()
                         + recipient.serialized_length()
                         + token_contract.serialized_length()
                 }
@@ -281,6 +259,9 @@ mod event {
                     let (destination_chain, remainder) = String::from_bytes(remainder)?;
                     let (destination_address, remainder) = String::from_bytes(remainder)?;
                     let (amount, remainder) = U256::from_bytes(remainder)?;
+                    let (gas_commission, remainder) = U256::from_bytes(remainder)?;
+                    let (stable_commission_percent, remainder) = U256::from_bytes(remainder)?;
+                    let (nonce, remainder) = U128::from_bytes(remainder)?;
                     let (sender, remainder) = Key::from_bytes(remainder)?;
                     Ok((
                         BridgeEvent::FundsIn {
@@ -288,6 +269,9 @@ mod event {
                             destination_chain,
                             destination_address,
                             amount,
+                            gas_commission,
+                            stable_commission_percent,
+                            nonce,
                             sender,
                         },
                         remainder,
@@ -298,6 +282,7 @@ mod event {
                     let (source_chain, remainder) = String::from_bytes(remainder)?;
                     let (source_address, remainder) = String::from_bytes(remainder)?;
                     let (amount, remainder) = U256::from_bytes(remainder)?;
+                    let (transaction_id, remainder) = U256::from_bytes(remainder)?;
                     let (recipient, remainder) = Key::from_bytes(remainder)?;
                     Ok((
                         BridgeEvent::FundsOut {
@@ -305,6 +290,7 @@ mod event {
                             source_chain,
                             source_address,
                             amount,
+                            transaction_id,
                             recipient,
                         },
                         remainder,

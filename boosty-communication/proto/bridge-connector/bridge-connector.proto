@@ -1,16 +1,17 @@
 syntax = "proto3";
 
-package golden_gate;
+package tricorn;
 
 import "google/protobuf/empty.proto";
+import "networks/networks.proto";
 import "connector/connector.proto";
 import "transfers/transfers.proto";
 
-option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-connector;pb_bridge_connector";
+option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-connector;pb_bridge_connector";
 
 service Connector {
     // Return metadata of the network this connector provides.
-    rpc Metadata(google.protobuf.Empty) returns (NetworkMetadata);
+    rpc Network(google.protobuf.Empty) returns (tricorn.Network);
     // Return tokens known by this connector.
     rpc KnownTokens(google.protobuf.Empty) returns (ConnectorTokens);
     

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package golden_gate;
+package tricorn;
 
-option go_package = "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks;pb_networks";
+option go_package = "github.com/BoostyLabs/golden-gate-communication/go-gen/networks;pb_networks";
 
 enum NetworkType {
     NT_EVM = 0;
@@ -10,14 +10,18 @@ enum NetworkType {
     NT_SOLANA = 2;
 }
 
-message ConnectedNetworksResponse {
-    message Network {
-        uint32 id = 1;
-        string name = 2;
-        NetworkType type = 3;
-        bool is_testnet = 4;
-    }
+message Network {
+    uint32 id = 1;
+    string name = 2;
+    NetworkType type = 3;
+    bool is_testnet = 4;
+    string node_address = 5;
+    string token_contract = 6;
+    string bridge_contract = 7;
+    uint64 gas_limit = 8;
+}
 
+message ConnectedNetworksResponse {
     repeated Network networks = 1;
 }
 
