@@ -51,6 +51,29 @@ postgres://postgres:1313@localhost:6433/boosty_bridge_db?sslmode=disable
 postgres://postgres:1212@localhost:6432/boosty_bridge_db?sslmode=disable
 ```
 
+### How to run tests
+
+##### Setup database in docker
+
+**signer**:
+
+**bridge**:
+
+`docker run --name test-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=testdb_signer -p 6432:5432 -d postgres`
+
+```
+go test ./...
+```
+
+**bridge**:
+
+`docker run --name test-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=testdb_bridge -p 6433:5432 -d postgres`
+
+```
+go test ./...
+```
+
+
 ### Smart contract deployment
 
 You have to generate private keys for Casper and Ethereum.
