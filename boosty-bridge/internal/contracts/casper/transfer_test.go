@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"os"
 	"testing"
+	"time"
 
 	casper_ed25519 "github.com/casper-ecosystem/casper-golang-sdk/keypair/ed25519"
 	"github.com/ethereum/go-ethereum/common"
@@ -31,7 +32,7 @@ func TestCasper_BridgeIn(t *testing.T) {
 
 		accountAddress            = "daa2b596e0a496b04933e241e0567f2bcbecc829aa57d88cab096c28fd07dee2"
 		tokenContractAddress      = "3c0c1847d1c410338ab9b4ee0919c181cf26085997ff9c797e8a1ae5b02ddf23"
-		bridgeContractPackageHash = "f5edf623df3c50e9498bc77c3391ad6f84783cd1c1ffb4232db3c0b87851e759"
+		bridgeContractPackageHash = "7225d70f3e197d78dd286a77bfa219e8573d62e6c4b62ade27ec14c69a88442f"
 	)
 
 	ctx := context.Background()
@@ -49,6 +50,9 @@ func TestCasper_BridgeIn(t *testing.T) {
 
 	tokenContractAddressBytes, err := hex.DecodeString(tokenContractAddress)
 	require.NoError(t, err)
+
+	deadlineTime := time.Now().UTC().Add(time.Second * time.Duration(86400)).UnixMilli()
+	deadline := big.NewInt(0).SetInt64(deadlineTime)
 
 	var signature []byte
 	t.Run("get bridgeIn signature", func(t *testing.T) {
@@ -70,8 +74,8 @@ func TestCasper_BridgeIn(t *testing.T) {
 			AccountAddress:     accountAddressBytes,
 			Amount:             big.NewInt(10000),
 			GasCommission:      big.NewInt(1000),
-			Deadline:           big.NewInt(1677257521),
-			Nonce:              big.NewInt(555),
+			Deadline:           deadline,
+			Nonce:              big.NewInt(112),
 			DestinationChain:   "DEST",
 			DestinationAddress: "DESTADDR",
 		})
@@ -93,8 +97,8 @@ func TestCasper_BridgeIn(t *testing.T) {
 			TokenContractAddress:        tokenContractAddressBytes,
 			Amount:                      big.NewInt(10000),
 			GasCommission:               big.NewInt(1000),
-			Deadline:                    big.NewInt(1677257521),
-			Nonce:                       big.NewInt(555),
+			Deadline:                    deadline,
+			Nonce:                       big.NewInt(112),
 			DestinationChain:            "DEST",
 			DestinationAddress:          "DESTADDR",
 			Signature:                   signature,
@@ -240,8 +244,8 @@ func TestCasperTransferOut(t *testing.T) {
 
 		accountAddress            = "daa2b596e0a496b04933e241e0567f2bcbecc829aa57d88cab096c28fd07dee2"
 		tokenContractAddress      = "3c0c1847d1c410338ab9b4ee0919c181cf26085997ff9c797e8a1ae5b02ddf23"
-		bridgeContractPackageHash = "9299f58df67c2eff01e97f362996d35ab5393167e58c58360b1721cce95a7bbc"
-		recipientAddress          = "9060c0820b5156b1620c8e3344d17f9fad5108f5dc2672f2308439e84363c88e"
+		bridgeContractPackageHash = "7225d70f3e197d78dd286a77bfa219e8573d62e6c4b62ade27ec14c69a88442f"
+		recipientAddress          = "daa2b596e0a496b04933e241e0567f2bcbecc829aa57d88cab096c28fd07dee2"
 	)
 
 	ctx := context.Background()
@@ -273,14 +277,18 @@ func TestCasperTransferOut(t *testing.T) {
 			return signature, err
 		})
 
+		bridgeHash, err := hex.DecodeString(bridgeContractPackageHash)
+		require.NoError(t, err)
+
 		signature, err = signer.GetTransferOutSignature(ctx, casper_chain.TransferOutSignature{
-			Prefix:           "BBCSP/BRG_IN",
+			Prefix:           "TRICORN_TRANSFER_OUT",
+			BridgeHash:       bridgeHash,
 			TokenPackageHash: tokenContractAddressBytes,
 			AccountAddress:   accountAddressBytes,
 			Recipient:        recipientAddressBytes,
 			Amount:           big.NewInt(2),
 			GasCommission:    big.NewInt(1),
-			Nonce:            big.NewInt(1),
+			Nonce:            big.NewInt(113),
 		})
 		require.NoError(t, err)
 		require.NotEmpty(t, signature)
@@ -295,12 +303,12 @@ func TestCasperTransferOut(t *testing.T) {
 		txHash, err := transfer.TransferOut(ctx, casper.TransferOutRequest{
 			PublicKey:                   pair.PublicKey(),
 			ChainName:                   "CASPER-TEST",
-			StandardPaymentForBridgeOut: 10000000000, // 1 CSPR.
+			StandardPaymentForBridgeOut: 40000000000, // 40 CSPR.
 			BridgeContractPackageHash:   bridgeContractPackageHash,
 			TokenContractAddress:        tokenContractAddressBytes,
 			Amount:                      big.NewInt(2),
 			GasCommission:               big.NewInt(1),
-			Nonce:                       big.NewInt(1),
+			Nonce:                       big.NewInt(113),
 			Recipient:                   recipientAddressBytes,
 			Signature:                   signature,
 		})

@@ -109,7 +109,7 @@ func (service *Service) BridgeOut(ctx context.Context, req chains.TokenOutReques
 		PubKeyData: respPubKey,
 	}
 
-	standardPayment := big.NewInt(0).SetUint64(service.config.GasLimit)
+	standardPayment := new(big.Int).SetUint64(service.config.GasLimit)
 
 	deployParams := sdk.NewDeployParams(publicKey, strings.ToLower(service.config.ChainName.String()), nil, 0)
 	payment := sdk.StandardPayment(standardPayment)
@@ -347,30 +347,100 @@ func (service *Service) parseEventFromTransform(event Event, transform Transform
 		return chains.EventVariant{}, ErrConnector.Wrap(err)
 	}
 
-	tokenContractAddress, err := hex.DecodeString(eventData.GetTokenContractAddress())
-	if err != nil {
-		return chains.EventVariant{}, ErrConnector.Wrap(err)
+	var (
+		tokenContractAddress []byte
+		chainName            string
+		chainAddress         string
+		amountStr            string
+		userWalletAddress    []byte
+	)
+
+	if eventType == fundInType {
+		tokenContractAddress, err = hex.DecodeString(eventData.GetTokenContractAddress())
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+
+		chainName, err = eventData.GetChainName()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+
+		chainAddress, err = eventData.GetChainAddress()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+
+		amount, err := eventData.GetAmount()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+		amountStr = strconv.Itoa(amount)
+
+		gasCommission, err := eventData.GetGasCommission()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+		gasCommissionStr := strconv.Itoa(gasCommission)
+		// TODO: add in event later.
+		_ = gasCommissionStr
+
+		stableCommissionPercent, err := eventData.GetStableCommissionPercent()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+		stableCommissionPercentStr := strconv.Itoa(stableCommissionPercent)
+		// TODO: add in event later.
+		_ = stableCommissionPercentStr
+
+		nonce, err := eventData.GetNonce()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+		nonceStr := strconv.Itoa(nonce)
+		// TODO: add in event later.
+		_ = nonceStr
+
+		userWalletAddress, err = hex.DecodeString(eventData.GetUserWalletAddress())
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
 	}
 
-	chainName, err := eventData.GetChainName()
-	if err != nil {
-		return chains.EventVariant{}, ErrConnector.Wrap(err)
-	}
+	if eventType == fundOutType {
+		tokenContractAddress, err = hex.DecodeString(eventData.GetTokenContractAddress())
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
 
-	chainAddress, err := eventData.GetChainAddress()
-	if err != nil {
-		return chains.EventVariant{}, ErrConnector.Wrap(err)
-	}
+		chainName, err = eventData.GetChainName()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
 
-	amount, err := eventData.GetAmount()
-	if err != nil {
-		return chains.EventVariant{}, ErrConnector.Wrap(err)
-	}
-	amountStr := strconv.Itoa(amount)
+		chainAddress, err = eventData.GetChainAddress()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
 
-	userWalletAddress, err := hex.DecodeString(eventData.GetUserWalletAddress())
-	if err != nil {
-		return chains.EventVariant{}, ErrConnector.Wrap(err)
+		amount, err := eventData.GetAmount()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+		amountStr = strconv.Itoa(amount)
+
+		transactionID, err := eventData.GetTransactionID()
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
+		transactionIDStr := strconv.Itoa(transactionID)
+		// TODO: add in event later.
+		_ = transactionIDStr
+
+		userWalletAddress, err = hex.DecodeString(eventData.GetUserWalletAddress())
+		if err != nil {
+			return chains.EventVariant{}, ErrConnector.Wrap(err)
+		}
 	}
 
 	hash, err := hex.DecodeString(event.DeployProcessed.DeployHash)
@@ -483,10 +553,20 @@ func (service *Service) subscribeEvents(ctx context.Context) error {
 			return ErrConnector.Wrap(err)
 		}
 
-		rawBody = []byte(strings.Replace(string(rawBody), "data:", "", 1))
+		switch {
+		case string(rawBody) == ":" || len(string(rawBody)) < 5:
+			continue
+		case len(string(rawBody)) >= 5 && string(rawBody)[:5] == "data:":
+			rawBody = []byte(string(rawBody)[5:])
+		}
 
 		var event Event
-		_ = json.Unmarshal(rawBody, &event)
+
+		err = json.Unmarshal(rawBody, &event)
+		if err != nil {
+			// continue execution because event has unsupported structure.
+			continue
+		}
 
 		transforms := event.DeployProcessed.ExecutionResult.Success.Effect.Transforms
 		if len(transforms) == 0 {
@@ -542,8 +622,8 @@ func (service *Service) BridgeInSignature(ctx context.Context, req chains.Bridge
 		return chains.BridgeInSignatureResponse{}, ErrConnector.Wrap(err)
 	}
 
-	deadlineTime := time.Now().UTC().Add(time.Second * time.Duration(service.config.SignatureValidityTime)).Unix()
-	deadline := big.NewInt(0).SetInt64(deadlineTime)
+	deadlineTime := time.Now().UTC().Add(time.Second * time.Duration(service.config.SignatureValidityTime)).UnixMilli()
+	deadline := new(big.Int).SetInt64(deadlineTime)
 
 	signature, err := service.signer.GetBridgeInSignature(ctx, BridgeInSignature{
 		Prefix:             service.config.BridgeInPrefix,
@@ -574,15 +654,16 @@ func (service *Service) BridgeInSignature(ctx context.Context, req chains.Bridge
 
 // CancelSignature returns signature for user to return funds.
 func (service *Service) CancelSignature(ctx context.Context, req chains.CancelSignatureRequest) (chains.CancelSignatureResponse, error) {
-	tokenPackageHashChainBytes, err := hex.DecodeString(service.config.BridgeContractAddress)
+	bridgeHashBytes, err := hex.DecodeString(service.config.BridgeContractAddress)
 	if err != nil {
 		return chains.CancelSignatureResponse{}, ErrConnector.Wrap(err)
 	}
 
 	signature, err := service.signer.GetTransferOutSignature(ctx, TransferOutSignature{
-		Prefix:           service.config.BridgeInPrefix,
-		TokenPackageHash: tokenPackageHashChainBytes,
-		AccountAddress:   req.Recipient.Bytes(),
+		Prefix:           service.config.TransferOutPrefix,
+		BridgeHash:       bridgeHashBytes,
+		TokenPackageHash: req.Token,
+		AccountAddress:   req.Recipient,
 		Amount:           req.Amount,
 		GasCommission:    req.Commission,
 		Nonce:            req.Nonce,
@@ -615,7 +696,7 @@ func (service *Service) RemoveEventSubscriber(id uuid.UUID) {
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
 
-	subIndex := 0
+	var subIndex int
 	for index, subscriber := range service.eventSubscribers {
 		if subscriber.GetID() == id {
 			subIndex = index

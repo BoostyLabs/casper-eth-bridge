@@ -10,7 +10,7 @@ import appConfig from '@/app/configs/appConfig.json';
 import { META_TAGS_CONFIG, parseMetaTag } from '@app/internal/parseMetaTag';
 import { CasperEntryPoints, CasperRuntimeArgs } from '@/casper';
 import { NetworkNames, NetworkTypes } from '@/networks';
-import { NetworkAddress, SignatureRequest } from '@/transfers';
+import { CancelSignatureRequest, NetworkAddress, SignatureRequest } from '@/transfers';
 import { Wallet } from '@/wallets';
 import { LocalStorageKeys } from '@app/hooks/useLocalStorage';
 
@@ -47,7 +47,7 @@ export class CasperWallet implements Wallet {
 
     /** Requests CasperCasper account-hash.
      * @returns {string} - active account-hash.
-    */
+     */
     public async address(): Promise<string> {
         const publicKey = await this.getPublicKey();
         return encodeBase16(publicKey.toAccountHash());
@@ -108,6 +108,24 @@ export class CasperWallet implements Wallet {
         });
     };
 
+    /** Represents a collection of arguments passed to a smart contract to cancel transaction.
+     * @param {string} amount - transaction amount.
+     * @param {string} destination - receiver wallet address.
+     * @returns {RuntimeArgs} - arguments collection.
+     */
+    private async getCancelRuntimeArgs(cancelSignatureRequest: CancelSignatureRequest): Promise<RuntimeArgs | null> {
+        const signature = await transfersService.cancelSignature(cancelSignatureRequest);
+
+        return await RuntimeArgs.fromMap({
+            [CasperRuntimeArgs.TOKEN_CONTRACT]: CLValueBuilder.byteArray(this.hashToByteArray(parseMetaTag(META_TAGS_CONFIG.CASPER_TOKEN_CONTRACT))),
+            [CasperRuntimeArgs.AMOUNT]: CLValueBuilder.u256(signature.amount),
+            [CasperRuntimeArgs.COMMISSION]: CLValueBuilder.u256(signature.commission),
+            [CasperRuntimeArgs.NONCE]: CLValueBuilder.u128(signature.nonce),
+            [CasperRuntimeArgs.RECIPIENT]: CLValueBuilder.string(signature.recipient),
+            [CasperRuntimeArgs.SIGNATURE]: CLValueBuilder.byteArray(this.hashToByteArray(signature.signature.slice(appConfig.numbers.TWO_NUMBER))),
+        });
+    };
+
     /** Makes deploy transaction.
      * @param {string} chainName - transaction chain name
      * @param {Uint8Array} contractHashAsByteArray
@@ -141,7 +159,7 @@ export class CasperWallet implements Wallet {
      * @param {CasperEntryPoints} entryPoint - casper entry point.
      * @param {RuntimeArgs} runtimeArgs - arguments collection passed to a smart contract.
      * @returns {string} - Casper transaction signature.
-    */
+     */
     private contractCall = async(entryPoint: CasperEntryPoints, runtimeArgs: RuntimeArgs) => {
         const contractHashAsByteArray = this.hashToByteArray(this.CONTRACT_HASH);
         const deploy = await this.makeDeploy(
@@ -185,7 +203,12 @@ export class CasperWallet implements Wallet {
         await this.casper.sendTransaction(JSON.stringify(deploy), this.RPC_NODE_ADDRESS);
     };
 
-    public async cancelTransaction(): Promise<void> {
-        // TODO: implement.
+    public async cancelTransaction(cancelSignatureRequest: CancelSignatureRequest): Promise<void> {
+        const cancelRuntimeArgs: RuntimeArgs | null = await this.getCancelRuntimeArgs(cancelSignatureRequest);
+        if (!cancelRuntimeArgs) {
+            return;
+        }
+        const deploy = await this.contractCall(CasperEntryPoints.CANCEL_TRANSACTION, cancelRuntimeArgs);
+        await this.casper.cancelTransction(JSON.stringify(deploy), this.RPC_NODE_ADDRESS);
     }
 };

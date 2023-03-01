@@ -10,10 +10,10 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	bridgeconnectorpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-connector"
-	connectorpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector"
-	networkspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
-	pb_transfers "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
+	bridgeconnectorpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-connector"
+	connectorpb "github.com/BoostyLabs/golden-gate-communication/go-gen/connector"
+	networkspb "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
+	pb_transfers "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
 
 	"tricorn/bridge"
 	"tricorn/bridge/networks"
@@ -187,8 +187,8 @@ func (connectorRPC *connectorRPC) BridgeInSignature(ctx context.Context, req bri
 func (connectorRPC *connectorRPC) CancelSignature(ctx context.Context, req chains.CancelSignatureRequest) (chains.CancelSignatureResponse, error) {
 	signature, err := connectorRPC.client.CancelSignature(ctx, &pb_transfers.CancelSignatureRequest{
 		Nonce:      req.Nonce.Uint64(),
-		Token:      req.Token.Bytes(),
-		Recipient:  req.Recipient.Bytes(),
+		Token:      req.Token,
+		Recipient:  req.Recipient,
 		Commission: req.Commission.String(),
 		Amount:     req.Amount.String(),
 	})

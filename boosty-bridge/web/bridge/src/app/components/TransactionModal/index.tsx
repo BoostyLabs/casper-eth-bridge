@@ -81,12 +81,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ amount, dest
             navigation(RoutesConfig.TransactionsHistory.path);
             location.reload();
         } catch (error: any) {
+            setIsConfirmButtonDisabled(false);
             if (error.message === appConfig.strings.metamaskErrors.USER_DENIED_TRANSACTION_SIGNATURE) {
-                setIsConfirmButtonDisabled(false);
                 Notifications.transactionViaMetaMaskWasCanceled();
                 return;
             }
-            Notifications.couldNotSendTransactionViaMetaMaskWallet();
+            Notifications.notify(`Error: ${error.message.split(':').pop()}`);
         };
     };
 
@@ -126,10 +126,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ amount, dest
                     break;
             }
         }
-    }
+    };
+
+    /** Canceles transaction and close modal popup. */
+    const cancelTransaction = () => {
+        setIsConfirmButtonDisabled(false);
+        onClose();
+    };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal isOpen={isOpen} onClose={cancelTransaction}>
             <div className="transaction__wrapper">
                 <div className="transaction__header">
                     <div className="transaction__header__token-from">
@@ -161,12 +167,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ amount, dest
                 </div>
                 {
                     transactionProgress === appConfig.numbers.ONE_HUNDRED_NUMBER &&
-                        <div className="transaction__favorite" onClick={() => setIsTransactionFavorite(!isTransactionFavorite)}>
-                            <div className="transaction__favorite__outer-checkbox">
-                                <div className={`transaction__favorite__inner-checkbox${favoriteBlockClassName}`}></div>
-                            </div>
-                            <span className="transaction__favorite__label">Save to favorites</span>
+                    <div className="transaction__favorite" onClick={() => setIsTransactionFavorite(!isTransactionFavorite)}>
+                        <div className="transaction__favorite__outer-checkbox">
+                            <div className={`transaction__favorite__inner-checkbox${favoriteBlockClassName}`}></div>
                         </div>
+                        <span className="transaction__favorite__label">Save to favorites</span>
+                    </div>
                 }
                 {isTransactionProgressStarted
                     ?
@@ -177,7 +183,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ amount, dest
                     </div>
                     :
                     <div className="transaction__buttons">
-                        <button aria-label="Cancel transaction" className="transaction__cancel-btn" onClick={onClose}>Cancel</button>
+                        <button aria-label="Cancel transaction" className="transaction__cancel-btn" onClick={cancelTransaction}>Cancel</button>
                         {/** TODO: Will be added wallet check and call different method */}
                         <button
                             aria-label="Confirm transaction"

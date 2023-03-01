@@ -45,6 +45,12 @@ type Config struct {
 	GatewayGrpcServerAddress string             `env:"GATEWAY_GRPC_SERVER_ADDRESS"`
 	BridgeGrpcServerAddress  string             `env:"BRIDGE_GRPC_SERVER_ADDRESS"`
 	CommunicationMode        communication.Mode `env:"COMMUNICATION_MODE"`
+
+	CasperTokenAddress    string `env:"CASPER_TOKEN_CONTRACT"`
+	EthTokenAddress       string `env:"ETH_TOKEN_CONTRACT"`
+	PolygonTokenAddress   string `env:"POLYGON_TOKEN_CONTRACT"`
+	BnbTokenAddress       string `env:"BNB_TOKEN_CONTRACT"`
+	AvalancheTokenAddress string `env:"AVALANCHE_TOKEN_CONTRACT"`
 }
 
 // commands.
@@ -234,13 +240,13 @@ func cmdSeed(cmd *cobra.Command, args []string) (err error) {
 		return Error.Wrap(err)
 	}
 
-	casperContractAddress, err := networks.StringToBytes(networks.IDCasperTest, "hash-3c0c1847d1c410338ab9b4ee0919c181cf26085997ff9c797e8a1ae5b02ddf23")
+	casperContractAddress, err := networks.StringToBytes(networks.IDCasperTest, config.CasperTokenAddress)
 	if err != nil {
 		log.Error("could not decode casper contract address", Error.Wrap(err))
 		return Error.Wrap(err)
 	}
 
-	ethContractAddress, err := networks.StringToBytes(networks.IDGoerli, "0E26df2BaaFBC976a104EE3cccf1B467ff1b7a68")
+	ethContractAddress, err := networks.StringToBytes(networks.IDGoerli, config.EthTokenAddress)
 	if err != nil {
 		log.Error("could not decode ethereum contract address", Error.Wrap(err))
 		return Error.Wrap(err)

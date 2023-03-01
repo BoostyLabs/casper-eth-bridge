@@ -49,6 +49,7 @@ type BridgeInSignature struct {
 // TransferOutSignature describes values to generate signature for transferOut method.
 type TransferOutSignature struct {
 	Prefix           string
+	BridgeHash       []byte
 	TokenPackageHash []byte
 	AccountAddress   []byte
 	Recipient        []byte
@@ -71,6 +72,7 @@ type Config struct {
 	FeePercentage         string        `env:"FEE_PERCENTAGE"`
 	EstimatedConfirmation uint32        `env:"ESTIMATED_CONFIRMATION"`
 	BridgeInPrefix        string        `env:"BRIDGE_IN_PREFIX"`
+	TransferOutPrefix     string        `env:"TRANSFER_OUT_PREFIX"`
 	SignatureValidityTime uint32        `env:"SIGNATURE_VALIDITY_TIME"`
 }
 
@@ -110,4 +112,11 @@ const (
 	WriteCLValueKey string = "WriteCLValue"
 	// BytesKey defines that WriteCLValue key is bytes. This key stores data of the transforming event.
 	BytesKey string = "bytes"
+)
+
+const (
+	// fundInType defines fund in event type.
+	fundInType = 0
+	// fundOutType defines fund out event type.
+	fundOutType = 1
 )

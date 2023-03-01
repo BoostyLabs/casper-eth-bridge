@@ -78,6 +78,7 @@ func (s *Signer) GetTransferOutSignature(ctx context.Context, transferOut casper
 	}
 
 	data = append(data, prefixChainBytes...)
+	data = append(data, transferOut.BridgeHash...)
 	data = append(data, transferOut.TokenPackageHash...)
 	data = append(data, transferOut.AccountAddress...)
 	transferOut.Recipient = append([]byte{0}, transferOut.Recipient...)

@@ -7,7 +7,6 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 
 	"tricorn/bridge/networks"
@@ -183,8 +182,8 @@ type BridgeInSignatureResponse struct {
 // CancelSignatureRequest describes the values needed to generate cancel signature.
 type CancelSignatureRequest struct {
 	Nonce      *big.Int
-	Token      common.Address
-	Recipient  common.Address
+	Token      []byte
+	Recipient  []byte
 	Commission *big.Int
 	Amount     *big.Int
 }

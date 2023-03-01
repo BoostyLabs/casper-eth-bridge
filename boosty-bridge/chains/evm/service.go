@@ -268,12 +268,14 @@ func (service *Service) readOldEvents(ctx context.Context, fromBlock, toBlock ui
 func (service *Service) subscribeEvents(ctx context.Context) error {
 	ticker := time.NewTicker(time.Duration(service.config.EventsReadingIntervalInSeconds) * time.Second)
 
-	blockNumber, err := service.ethClient.BlockNumber(ctx)
+	// startBlockNumber stores block number from which we start reading when connector is connected with bridge.
+	startBlockNumber, err := service.ethClient.BlockNumber(ctx)
 	if err != nil {
 		return Error.Wrap(err)
 	}
 
-	err = service.readOldEvents(ctx, blockNumber-1, blockNumber)
+	previousBlockNumber := startBlockNumber - 1
+	err = service.readOldEvents(ctx, previousBlockNumber, startBlockNumber)
 	if err != nil {
 		return Error.Wrap(err)
 	}
@@ -290,20 +292,20 @@ func (service *Service) subscribeEvents(ctx context.Context) error {
 		currentBlockNumber, err := service.ethClient.BlockNumber(ctx)
 		if err != nil {
 			log.Error("could not get current block number", Error.Wrap(err))
-		}
-
-		if blockNumber >= currentBlockNumber {
 			continue
 		}
 
-		err = service.readOldEvents(ctx, blockNumber, currentBlockNumber)
-		if err != nil {
-			log.Error("could not read old events", Error.Wrap(err))
+		if startBlockNumber >= currentBlockNumber {
+			continue
 		}
 
-		if err == nil {
-			blockNumber = currentBlockNumber
+		err = service.readOldEvents(ctx, startBlockNumber, currentBlockNumber)
+		if err != nil {
+			log.Error("could not read old events", Error.Wrap(err))
+			continue
 		}
+
+		startBlockNumber = currentBlockNumber
 	}
 
 	return nil
@@ -454,8 +456,8 @@ func (service *Service) BridgeInSignature(ctx context.Context, req chains.Bridge
 // CancelSignature returns signature for user to return funds.
 func (service *Service) CancelSignature(ctx context.Context, req chains.CancelSignatureRequest) (chains.CancelSignatureResponse, error) {
 	transferOut := TransferOutRequest{
-		Token:      req.Token,
-		Recipient:  req.Recipient,
+		Token:      common.BytesToAddress(req.Token),
+		Recipient:  common.BytesToAddress(req.Recipient),
 		Amount:     req.Amount,
 		Commission: req.Commission,
 		Nonce:      req.Nonce,

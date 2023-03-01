@@ -10,17 +10,16 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/zeebo/errs"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	bridgeconnectorpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/bridge-connector"
-	connectorpb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/connector"
-	networkspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/networks"
-	transferspb "github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen/transfers"
+	bridgeconnectorpb "github.com/BoostyLabs/golden-gate-communication/go-gen/bridge-connector"
+	connectorpb "github.com/BoostyLabs/golden-gate-communication/go-gen/connector"
+	networkspb "github.com/BoostyLabs/golden-gate-communication/go-gen/networks"
+	transferspb "github.com/BoostyLabs/golden-gate-communication/go-gen/transfers"
 
 	"tricorn/bridge/networks"
 	"tricorn/chains"
@@ -336,8 +335,8 @@ func (s *Connector) CancelSignature(ctx context.Context, req *transferspb.Cancel
 
 	cancelSignature := chains.CancelSignatureRequest{
 		Nonce:      new(big.Int).SetUint64(req.Nonce),
-		Token:      common.BytesToAddress(req.Token),
-		Recipient:  common.BytesToAddress(req.Recipient),
+		Token:      req.Token,
+		Recipient:  req.Recipient,
 		Commission: commission,
 		Amount:     amount,
 	}
