@@ -93,8 +93,6 @@ github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen v0.0.0-20230
 github.com/BoostyLabs/casper-eth-bridge/boosty-communication/go-gen v0.0.0-20230227155218-7354cd5fb742/go.mod h1:bVX00pRmWhQoPyo2acwYdHm55lujc35QNwTaiB0VzzI=
 github.com/BoostyLabs/evmsignature v0.0.0-20220607084200-3e6bbbc9a60f h1:3mFikVkrg4fUjNo5G40JhZ9kXX7K2nba9O9ssheLLco=
 github.com/BoostyLabs/evmsignature v0.0.0-20220607084200-3e6bbbc9a60f/go.mod h1:WZasHB4xP6Id9Tk7CKQg60suKg3/jc3raUUktdz7Bf0=
-github.com/BoostyLabs/golden-gate-communication/go-gen v0.0.0-20230227130143-3efdf854cd94 h1:o9gqozoP7GQV4VNt+EihbpRxITFPiYUMm4ZQ78Sd0Go=
-github.com/BoostyLabs/golden-gate-communication/go-gen v0.0.0-20230227130143-3efdf854cd94/go.mod h1:BolacwuJVt9G8GG+KsY6Hjpfzvba6x2qw+zAg14YaFY=
 github.com/BoostyLabs/venly v0.0.0-20220410161459-0a9b893c3f1f/go.mod h1:Wo+wsTXcbBJLKnUxuUUw2t4F4GqbpZj3srDPhgdxSAM=
 github.com/BoostyLabs/venly v0.0.0-20220525101407-1290ddd74c27 h1:M1aAepD97qIccJtPhSg66eW02T3N5kiZjjA5SnnWPsc=
 github.com/BoostyLabs/venly v0.0.0-20220525101407-1290ddd74c27/go.mod h1:vLAGjcuwfscZEfUs2LSW5lKrm3cXdBuRUSoWdhkPHcs=
