@@ -431,7 +431,7 @@ func (service *Service) Notify(ctx context.Context, event chains.EventVariant) {
 
 ### Gateway
 
-[documentation](https://test.bridge.gateway.ggxchain.io/api/v0/docs/)
+[documentation](https://dev.bridge.gateway.tricorn.network/api/v0/docs/)
 
 ### Web 
 
