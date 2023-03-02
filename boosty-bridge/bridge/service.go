@@ -311,7 +311,14 @@ func (service *Service) EstimateTransfer(ctx context.Context, transfer transfers
 		return chains.Estimation{}, Error.Wrap(ErrInvalidAmount)
 	}
 
-	estimation, err := service.connectors[recipientNetworkName].EstimateTransfer(ctx, transfer)
+	connector, exists := service.connectors[recipientNetworkName]
+	if !exists {
+		err := fmt.Errorf("%s connector is not connected", recipientNetworkName)
+		service.log.Error("", Error.Wrap(err))
+		return chains.Estimation{}, status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
+	estimation, err := connector.EstimateTransfer(ctx, transfer)
 	if err != nil {
 		return chains.Estimation{}, Error.Wrap(err)
 	}
@@ -378,7 +385,14 @@ func (service *Service) GetBridgeInSignature(ctx context.Context, request transf
 
 	gasCommission := new(big.Int).SetInt64(1)
 
-	bridgeInSignature, err := service.connectors[senderNetworkName].BridgeInSignature(ctx, BridgeInSignatureRequest{
+	connector, exists := service.connectors[senderNetworkName]
+	if !exists {
+		err := fmt.Errorf("%s connector is not connected", senderNetworkName)
+		service.log.Error("", Error.Wrap(err))
+		return BridgeInSignatureResponse{}, status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
+	bridgeInSignature, err := connector.BridgeInSignature(ctx, BridgeInSignatureRequest{
 		User:          senderAddress,
 		Nonce:         big.NewInt(nonce),
 		Token:         token.ContractAddress,
@@ -442,7 +456,14 @@ func (service *Service) CancelTransfer(ctx context.Context, transfer transfers.C
 		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
 	}
 
-	estimation, err := service.connectors[networkName].EstimateTransfer(ctx, transfers.EstimateTransfer{
+	connector, exists := service.connectors[networkName]
+	if !exists {
+		err := fmt.Errorf("%s connector is not connected", networkName)
+		service.log.Error("", Error.Wrap(err))
+		return transfers.CancelSignatureResponse{}, status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
+	estimation, err := connector.EstimateTransfer(ctx, transfers.EstimateTransfer{
 		SenderNetwork:    networkName.String(),
 		RecipientNetwork: networkName.String(),
 		TokenID:          uint32(tokenTransfer.TokenID),
@@ -465,7 +486,7 @@ func (service *Service) CancelTransfer(ctx context.Context, transfer transfers.C
 		Amount:     &tokenTransfer.Amount,
 	}
 
-	cancelSignatureResponse, err := service.connectors[networkName].CancelSignature(ctx, cancelSignatureRequest)
+	cancelSignatureResponse, err := connector.CancelSignature(ctx, cancelSignatureRequest)
 	if err != nil {
 		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
 	}
@@ -583,7 +604,13 @@ func (service *Service) eventInReaction(ctx context.Context, eventFund chains.Ev
 			return status.Error(codes.Internal, Error.Wrap(err).Error())
 		}
 
-		bridgeOut, err := service.connectors[networks.Name(eventFund.EventFundsIn.To.NetworkName)].BridgeOut(ctx, chains.TokenOutRequest{
+		connector, exists := service.connectors[networks.Name(eventFund.EventFundsIn.To.NetworkName)]
+		if !exists {
+			err := fmt.Errorf("%s connector is not connected", eventFund.EventFundsIn.To.NetworkName)
+			service.log.Error("", Error.Wrap(err))
+			return status.Error(codes.Internal, Error.Wrap(err).Error())
+		}
+		bridgeOut, err := connector.BridgeOut(ctx, chains.TokenOutRequest{
 			Amount: amount,
 			Token:  token.ContractAddress,
 			To:     toAddress,
