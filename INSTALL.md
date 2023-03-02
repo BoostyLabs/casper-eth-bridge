@@ -55,11 +55,11 @@ postgres://postgres:1212@localhost:6432/boosty_bridge_db?sslmode=disable
 
 ##### Setup database in docker
 
+`docker run --name=tricorn_db -e POSTGRES_PASSWORD='1212' -p 6432:5432 -d --rm postgres`
+
 **signer**:
 
-**bridge**:
-
-`docker run --name test-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=testdb_signer -p 6432:5432 -d postgres`
+`docker exec -it db createdb -U postgres boosty_bridge_db`
 
 ```
 go test ./...
@@ -67,7 +67,7 @@ go test ./...
 
 **bridge**:
 
-`docker run --name test-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=testdb_bridge -p 6433:5432 -d postgres`
+`docker exec -it db createdb -U postgres boosty_bridge_db`
 
 ```
 go test ./...
