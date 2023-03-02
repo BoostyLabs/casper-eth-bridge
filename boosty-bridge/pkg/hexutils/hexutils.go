@@ -19,6 +19,11 @@ func Has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
 }
 
+// Has00Prefix validates str begins with '00'.
+func Has00Prefix(str string) bool {
+	return len(str) >= 2 && str[0] == '0' && str[1] == '0'
+}
+
 // HasAccountHashPrefix validates str begins with 'account-hash'.
 func HasAccountHashPrefix(str string) bool {
 	return strings.Contains(str, accountHashPrefix) || strings.Contains(strings.ToLower(str), accountHashPrefix)

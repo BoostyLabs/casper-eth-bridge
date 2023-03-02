@@ -561,7 +561,6 @@ func (service *Service) subscribeEvents(ctx context.Context) error {
 		}
 
 		var event Event
-
 		err = json.Unmarshal(rawBody, &event)
 		if err != nil {
 			// continue execution because event has unsupported structure.

@@ -246,6 +246,9 @@ func StringToBytes(networkID ID, signatureStr string) ([]byte, error) {
 		if hexutils.Has0xPrefix(signatureStr) {
 			return hex.DecodeString(signatureStr[2:])
 		}
+		if hexutils.Has00Prefix(signatureStr) {
+			return hex.DecodeString(signatureStr[2:])
+		}
 		if hexutils.HasAccountHashPrefix(signatureStr) {
 			return hex.DecodeString(signatureStr[13:])
 		}

@@ -139,6 +139,8 @@ func (rpc *rpc) ConnectWithPing(ctx context.Context) error {
 // Connect will try to establish connection.
 func (rpc *rpc) Connect(ctx context.Context) error {
 	dialOpts := []grpc.DialOption{
+		grpc.WithAuthority(rpc.cfg.ServerAddress),
+		grpc.WithBlock(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 	connWithServer, err := grpc.DialContext(ctx, rpc.cfg.ServerAddress, dialOpts...)
