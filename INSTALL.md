@@ -57,21 +57,12 @@ postgres://postgres:1212@localhost:6432/boosty_bridge_db?sslmode=disable
 
 `docker run --name=tricorn_db -e POSTGRES_PASSWORD='1212' -p 6432:5432 -d --rm postgres`
 
-**signer**:
-
-`docker exec -it db createdb -U postgres boosty_bridge_db`
+`docker exec -it tricorn_db createdb -U postgres boosty_bridge_db`
 
 ```
 go test ./...
 ```
 
-**bridge**:
-
-`docker exec -it db createdb -U postgres boosty_bridge_db`
-
-```
-go test ./...
-```
 
 
 ### Smart contract deployment
