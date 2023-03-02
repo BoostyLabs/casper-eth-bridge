@@ -51,6 +51,20 @@ postgres://postgres:1313@localhost:6433/boosty_bridge_db?sslmode=disable
 postgres://postgres:1212@localhost:6432/boosty_bridge_db?sslmode=disable
 ```
 
+### How to run tests
+
+##### Setup database in docker
+
+`docker run --name=tricorn_db -e POSTGRES_PASSWORD='1212' -p 6432:5432 -d --rm postgres`
+
+`docker exec -it tricorn_db createdb -U postgres boosty_bridge_db`
+
+```
+go test ./...
+```
+
+
+
 ### Smart contract deployment
 
 You have to generate private keys for Casper and Ethereum.
