@@ -62,7 +62,7 @@ func (db *database) CreateSchema(ctx context.Context) error {
         );
         CREATE TABLE IF NOT EXISTS token_transfers (
             id                   BIGSERIAL PRIMARY KEY NOT NULL,
-            triggering_tx        INTEGER               NOT NULL,
+            triggering_tx        INTEGER,
             outbound_tx          INTEGER,
             token_id             INTEGER               NOT NULL,
             amount               BYTEA                 NOT NULL,

@@ -14,6 +14,7 @@ import { getTransfersHistory, setHistory } from '@/app/store/actions/transfers';
 import { RootState } from '@/app/store';
 import { Network, NetworkNames, NetworkTypes } from '@/networks';
 import { CancelSignatureRequest, Transfer, TransferPagination, TransferStatuses, TransfersHistory } from '@/transfers';
+import { CasperWallet } from '@/wallets/casperWallet';
 import { MetaMaskWallet } from '@/wallets/metamaskWallet';
 import { WalletsService } from '@/wallets/service';
 
@@ -55,6 +56,8 @@ const TransactionsHistory: React.FC = () => {
     const [searchedWalletAddress, setSearchedWalletAddress] = useState<string>('');
     const metaMaskWallet: MetaMaskWallet = new MetaMaskWallet();
     const metaMaskService = useMemo(() => new WalletsService(metaMaskWallet), []);
+    const casperWallet: CasperWallet = new CasperWallet();
+    const casperServise = useMemo(() => new WalletsService(casperWallet), []);
 
     /** Request network by type, i.e CASPER, EVM. */
     const getNetworkByType = (searchedNetwork: NetworkTypes) => {

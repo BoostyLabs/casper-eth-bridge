@@ -27,7 +27,7 @@ type tempMasterDB struct {
 }
 
 // DefaultTestConn default test conn string that is expected to work with postgres server.
-const DefaultTestConn = "postgres://postgres:1212@localhost/boosty_bridge_db?sslmode=disable"
+const DefaultTestConn = "postgres://postgres:1212@localhost:6432/boosty_bridge_db?sslmode=disable"
 
 // Run method will establish connection with db, create tables in random schema, run tests.
 func Run(t *testing.T, test func(ctx context.Context, t *testing.T, db bridge.DB)) {

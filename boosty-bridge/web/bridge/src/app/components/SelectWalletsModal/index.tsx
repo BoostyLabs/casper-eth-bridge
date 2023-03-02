@@ -97,6 +97,11 @@ export const WalletsModal: React.FC<WalletsModalProps> = ({ isOpen, onClose, set
 
     const connectWithCasper = async() => {
         try {
+            /** Checks if casper signer scripts injected. */
+            if (!window?.casperlabsHelper) {
+                window.open('https://chrome.google.com/webstore/detail/casper-signer/djhndpllfiibmcdbnmaaahkhchcoijce', '_blank');
+                return;
+            }
             const isConnected = await window?.casperlabsHelper?.isConnected();
 
             if (!isConnected) {

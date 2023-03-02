@@ -46,14 +46,14 @@ func (chore *chore) eventsReading(ctx context.Context, networkName networks.Name
 		fromBlock, err := chore.networkBlocks.Get(ctx, networks.NetworkNameToID[networkName])
 		if err != nil && !errors.Is(err, ErrNoNetworkBlock) {
 			chore.log.Error("", Error.Wrap(err))
-			return status.Error(codes.Internal, Error.Wrap(err).Error())
+			return nil
 		}
 		if errors.Is(err, ErrNoNetworkBlock) {
 			networkID, ok := networks.NetworkNameToID[networkName]
 			if !ok {
 				err = fmt.Errorf("no network with such name %v", networkName)
 				chore.log.Error("", Error.Wrap(err))
-				return status.Error(codes.Internal, Error.Wrap(err).Error())
+				return nil
 			}
 
 			err = chore.service.networkBlocks.Create(ctx, networks.NetworkBlock{
@@ -62,14 +62,14 @@ func (chore *chore) eventsReading(ctx context.Context, networkName networks.Name
 			})
 			if err != nil {
 				chore.log.Error("", Error.Wrap(err))
-				return status.Error(codes.Internal, Error.Wrap(err).Error())
+				return nil
 			}
 		}
 
 		err = connector.EventStream(ctx, uint64(fromBlock))
 		if err != nil {
 			chore.log.Error("", Error.Wrap(err))
-			return status.Error(codes.Internal, Error.Wrap(err).Error())
+			return nil
 		}
 
 		return nil
@@ -79,7 +79,7 @@ func (chore *chore) eventsReading(ctx context.Context, networkName networks.Name
 		err := chore.receiveEvents(ctx, subscriber, networkName, connector)
 		if err != nil {
 			chore.log.Error("couldn't receive events", Error.Wrap(err))
-			return status.Error(codes.Internal, Error.Wrap(err).Error())
+			return nil
 		}
 
 		return nil

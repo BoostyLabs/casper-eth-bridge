@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math/big"
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/zeebo/errs"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -112,7 +112,7 @@ func (service *Service) parseNetworkDataFromIDAndValidate(id uint32) (networkNam
 	networkID = networks.ID(id)
 	networkName, ok := networks.IDToNetworkName[networkID]
 	if !ok {
-		return networkName, networkID, ErrNotConnectedNetwork
+		return networkName, networkID, Error.Wrap(fmt.Errorf("network %s, err: %v", networkName, ErrNotConnectedNetwork))
 	}
 
 	return networkName, networkID, service.validateNetworkName(networkName)
@@ -126,7 +126,7 @@ func (service *Service) validateNetworkName(networkName networks.Name) error {
 
 	_, ok := service.connectors[networkName]
 	if !ok {
-		return ErrNotConnectedNetwork
+		return Error.Wrap(fmt.Errorf("network %s, err: %v", networkName, ErrNotConnectedNetwork))
 	}
 
 	return nil
@@ -171,9 +171,19 @@ func (service *Service) parseNetworkNameAndValidate(stringNetworkName string) (n
 func (service *Service) parseTransfers(ctx context.Context, tokenTransfers []transfers.TokenTransfer) ([]transfers.Transfer, error) {
 	transfersList := make([]transfers.Transfer, 0, len(tokenTransfers))
 	for _, tokenTransfer := range tokenTransfers {
-		triggeringTransaction, err := service.transactions.Get(ctx, tokenTransfer.TriggeringTx)
-		if err != nil {
-			return transfersList, err
+		var (
+			triggeringTransaction transactions.Transaction
+			triggeringTx          transfers.StringTxHash
+			err                   error
+		)
+
+		if tokenTransfer.Status != transfers.StatusWaiting && tokenTransfer.Status != transfers.StatusCancelled {
+			triggeringTransaction, err = service.transactions.Get(ctx, tokenTransfer.TriggeringTx)
+			if err != nil {
+				return transfersList, err
+			}
+
+			triggeringTx = parseStringTxHash(triggeringTransaction.NetworkID, triggeringTransaction.TxHash)
 		}
 
 		var outboundTx transfers.StringTxHash
@@ -192,7 +202,7 @@ func (service *Service) parseTransfers(ctx context.Context, tokenTransfers []tra
 			Sender:       parseNetworkAddress(tokenTransfer.SenderNetworkID, tokenTransfer.SenderAddress),
 			Recipient:    parseNetworkAddress(tokenTransfer.RecipientNetworkID, tokenTransfer.RecipientAddress),
 			Status:       tokenTransfer.Status,
-			TriggeringTx: parseStringTxHash(triggeringTransaction.NetworkID, triggeringTransaction.TxHash),
+			TriggeringTx: triggeringTx,
 			OutboundTx:   outboundTx,
 			CreatedAt:    triggeringTransaction.SeenAt,
 		}
@@ -301,7 +311,14 @@ func (service *Service) EstimateTransfer(ctx context.Context, transfer transfers
 		return chains.Estimation{}, Error.Wrap(ErrInvalidAmount)
 	}
 
-	estimation, err := service.connectors[recipientNetworkName].EstimateTransfer(ctx, transfer)
+	connector, exists := service.connectors[recipientNetworkName]
+	if !exists {
+		err := fmt.Errorf("%s connector is not connected", recipientNetworkName)
+		service.log.Error("", Error.Wrap(err))
+		return chains.Estimation{}, status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
+	estimation, err := connector.EstimateTransfer(ctx, transfer)
 	if err != nil {
 		return chains.Estimation{}, Error.Wrap(err)
 	}
@@ -317,10 +334,10 @@ func (service *Service) GetBridgeInSignature(ctx context.Context, request transf
 	}
 
 	// TODO: uncomment after fix.
-	// recipientNetworkName, err := service.parseNetworkNameAndValidate(request.Destination.NetworkName)
-	// if err != nil {
-	//	return BridgeInSignatureResponse{}, Error.Wrap(err)
-	// }.
+	recipientNetworkName, err := service.parseNetworkNameAndValidate(request.Destination.NetworkName)
+	if err != nil {
+		return BridgeInSignatureResponse{}, Error.Wrap(err)
+	}
 
 	amount, ok := new(big.Int).SetString(request.Amount, 10)
 	if !ok || amount.Int64() < 0 {
@@ -328,6 +345,7 @@ func (service *Service) GetBridgeInSignature(ctx context.Context, request transf
 	}
 
 	senderNetworkID := networks.NetworkNameToID[senderNetworkName]
+	recipientNetworkID := networks.NetworkNameToID[recipientNetworkName]
 
 	nonce, err := service.nonces.Get(ctx, senderNetworkID)
 	if err != nil {
@@ -340,6 +358,11 @@ func (service *Service) GetBridgeInSignature(ctx context.Context, request transf
 	}
 
 	senderAddress, err := networks.StringToBytes(senderNetworkID, request.Sender.Address)
+	if err != nil {
+		return BridgeInSignatureResponse{}, Error.Wrap(err)
+	}
+
+	recipientAddress, err := networks.StringToBytes(recipientNetworkID, request.Destination.Address)
 	if err != nil {
 		return BridgeInSignatureResponse{}, Error.Wrap(err)
 	}
@@ -360,9 +383,16 @@ func (service *Service) GetBridgeInSignature(ctx context.Context, request transf
 	//	return BridgeInSignatureResponse{}, Error.New("couldn't parse gas commission")
 	// }.
 
-	gasCommission := new(big.Int).SetInt64(0)
+	gasCommission := new(big.Int).SetInt64(1)
 
-	bridgeInSignature, err := service.connectors[senderNetworkName].BridgeInSignature(ctx, BridgeInSignatureRequest{
+	connector, exists := service.connectors[senderNetworkName]
+	if !exists {
+		err := fmt.Errorf("%s connector is not connected", senderNetworkName)
+		service.log.Error("", Error.Wrap(err))
+		return BridgeInSignatureResponse{}, status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
+	bridgeInSignature, err := connector.BridgeInSignature(ctx, BridgeInSignatureRequest{
 		User:          senderAddress,
 		Nonce:         big.NewInt(nonce),
 		Token:         token.ContractAddress,
@@ -380,6 +410,22 @@ func (service *Service) GetBridgeInSignature(ctx context.Context, request transf
 		return BridgeInSignatureResponse{}, Error.Wrap(networks.ErrTransactionNameInvalid)
 	}
 
+	tokenTransfer := transfers.TokenTransfer{
+		TokenID:            1, // todo: dynamically change.
+		Amount:             *amount,
+		Status:             transfers.StatusWaiting,
+		SenderNetworkID:    int64(networks.NetworkNameToID[senderNetworkName]),
+		SenderAddress:      senderAddress,
+		RecipientNetworkID: int64(recipientNetworkID),
+		RecipientAddress:   recipientAddress,
+	}
+
+	err = service.tokenTransfers.Create(ctx, tokenTransfer)
+	if err != nil {
+		service.log.Error(fmt.Sprintf("couldn't create token transfer for network name %s", request.Sender.NetworkName), Error.Wrap(err))
+		return BridgeInSignatureResponse{}, Error.Wrap(err)
+	}
+
 	return bridgeInSignature, service.nonces.Increment(ctx, senderID)
 }
 
@@ -390,8 +436,9 @@ func (service *Service) CancelTransfer(ctx context.Context, transfer transfers.C
 		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
 	}
 
-	tokenTransfer, err := service.tokenTransfers.GetByNetworkAndTx(ctx, networkID, transfer.Signature)
+	tokenTransfer, err := service.tokenTransfers.Get(ctx, int64(transfer.TransferID))
 	if err != nil {
+		service.log.Error("", Error.Wrap(err))
 		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
 	}
 
@@ -409,7 +456,14 @@ func (service *Service) CancelTransfer(ctx context.Context, transfer transfers.C
 		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
 	}
 
-	estimation, err := service.connectors[networkName].EstimateTransfer(ctx, transfers.EstimateTransfer{
+	connector, exists := service.connectors[networkName]
+	if !exists {
+		err := fmt.Errorf("%s connector is not connected", networkName)
+		service.log.Error("", Error.Wrap(err))
+		return transfers.CancelSignatureResponse{}, status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
+	estimation, err := connector.EstimateTransfer(ctx, transfers.EstimateTransfer{
 		SenderNetwork:    networkName.String(),
 		RecipientNetwork: networkName.String(),
 		TokenID:          uint32(tokenTransfer.TokenID),
@@ -424,16 +478,15 @@ func (service *Service) CancelTransfer(ctx context.Context, transfer transfers.C
 		return transfers.CancelSignatureResponse{}, Error.New("couldn't parse commission")
 	}
 
-	// TODO: Unify type for addresses, mb use byte format.
 	cancelSignatureRequest := chains.CancelSignatureRequest{
 		Nonce:      new(big.Int).SetInt64(nonce),
-		Token:      common.BytesToAddress(token.ContractAddress),
-		Recipient:  common.BytesToAddress(transfer.PublicKey),
+		Token:      token.ContractAddress,
+		Recipient:  transfer.PublicKey,
 		Commission: commission,
 		Amount:     &tokenTransfer.Amount,
 	}
 
-	cancelSignatureResponse, err := service.connectors[networkName].CancelSignature(ctx, cancelSignatureRequest)
+	cancelSignatureResponse, err := connector.CancelSignature(ctx, cancelSignatureRequest)
 	if err != nil {
 		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
 	}
@@ -446,6 +499,13 @@ func (service *Service) CancelTransfer(ctx context.Context, transfer transfers.C
 		Recipient:  tokenTransfer.SenderAddress,
 		Commission: commission.String(),
 		Amount:     tokenTransfer.Amount.String(),
+	}
+
+	tokenTransfer.Status = transfers.StatusCancelled
+	err = service.tokenTransfers.Update(ctx, tokenTransfer)
+	if err != nil {
+		service.log.Error("", Error.Wrap(err))
+		return transfers.CancelSignatureResponse{}, Error.Wrap(err)
 	}
 
 	return cancelTransferResponse, service.nonces.Increment(ctx, networkID)
@@ -489,6 +549,13 @@ func (service *Service) separateEvent(ctx context.Context, eventFund chains.Even
 
 // eventInReaction performs actions after fundIn event.
 func (service *Service) eventInReaction(ctx context.Context, eventFund chains.EventVariant, networkName networks.Name) error {
+	senderNetworkID := networks.NetworkNameToID[networkName]
+	senderAddress, err := networks.StringToBytes(senderNetworkID, hex.EncodeToString(eventFund.EventFundsIn.From))
+	if err != nil {
+		service.log.Error("", Error.Wrap(err))
+		return status.Error(codes.Internal, err.Error())
+	}
+
 	recipientNetworkID := networks.NetworkNameToID[networks.Name(eventFund.EventFundsIn.To.NetworkName)]
 	recipientAddress, err := networks.StringToBytes(recipientNetworkID, eventFund.EventFundsIn.To.Address)
 	if err != nil {
@@ -504,35 +571,21 @@ func (service *Service) eventInReaction(ctx context.Context, eventFund chains.Ev
 
 	networkID := networks.NetworkNameToID[networkName]
 
-	err = service.transactions.Exists(ctx, networkID, eventFund.EventFundsOut.Tx.Hash)
-	if errors.Is(err, ErrTransactionAlreadyExists) {
-		return nil
+	err = service.transactions.Exists(ctx, networkID, eventFund.EventFundsIn.Tx.Hash)
+	if err != nil {
+		if errors.Is(err, ErrTransactionAlreadyExists) {
+			return nil
+		}
+		return Error.Wrap(err)
 	}
 
 	transactionID, err := service.transactions.Create(ctx, transactions.Transaction{
 		NetworkID:   networkID,
 		TxHash:      eventFund.EventFundsIn.Tx.Hash,
-		Sender:      eventFund.EventFundsIn.From,
+		Sender:      senderAddress,
 		BlockNumber: int64(eventFund.EventFundsIn.Tx.BlockNumber),
 		SeenAt:      time.Now().UTC(),
 	})
-	if err != nil {
-		service.log.Error("", Error.Wrap(err))
-		return status.Error(codes.Internal, Error.Wrap(err).Error())
-	}
-
-	tokenTransfer := transfers.TokenTransfer{
-		TokenID:            1, // todo: dynamically change.
-		Amount:             *amount,
-		Status:             transfers.StatusConfirming,
-		SenderNetworkID:    int64(networks.NetworkNameToID[networkName]),
-		SenderAddress:      eventFund.EventFundsIn.From,
-		RecipientNetworkID: int64(recipientNetworkID),
-		RecipientAddress:   recipientAddress,
-		TriggeringTx:       transactionID,
-	}
-
-	err = service.tokenTransfers.Create(ctx, tokenTransfer)
 	if err != nil {
 		service.log.Error("", Error.Wrap(err))
 		return status.Error(codes.Internal, Error.Wrap(err).Error())
@@ -551,13 +604,19 @@ func (service *Service) eventInReaction(ctx context.Context, eventFund chains.Ev
 			return status.Error(codes.Internal, Error.Wrap(err).Error())
 		}
 
-		_, err = service.connectors[networks.Name(eventFund.EventFundsIn.To.NetworkName)].BridgeOut(ctx, chains.TokenOutRequest{
+		connector, exists := service.connectors[networks.Name(eventFund.EventFundsIn.To.NetworkName)]
+		if !exists {
+			err := fmt.Errorf("%s connector is not connected", eventFund.EventFundsIn.To.NetworkName)
+			service.log.Error("", Error.Wrap(err))
+			return status.Error(codes.Internal, Error.Wrap(err).Error())
+		}
+		bridgeOut, err := connector.BridgeOut(ctx, chains.TokenOutRequest{
 			Amount: amount,
 			Token:  token.ContractAddress,
 			To:     toAddress,
 			From: networks.Address{
 				NetworkName: networkName.String(),
-				Address:     hex.EncodeToString(eventFund.EventFundsIn.From),
+				Address:     hex.EncodeToString(senderAddress),
 			},
 			TransactionID: big.NewInt(int64(transactionID)),
 		})
@@ -565,6 +624,32 @@ func (service *Service) eventInReaction(ctx context.Context, eventFund chains.Ev
 			service.log.Error("", Error.Wrap(err))
 			return status.Error(codes.Internal, Error.Wrap(err).Error())
 		}
+		if len(bridgeOut.Txhash) == 0 {
+			err = errs.New("couldn't send bridgeOut in network %s", eventFund.EventFundsIn.To.NetworkName)
+			service.log.Error("", Error.Wrap(err))
+			return status.Error(codes.Internal, Error.Wrap(err).Error())
+		}
+	}
+
+	tokenTransfer := transfers.TokenTransfer{
+		TokenID:          1, // todo: dynamically change.
+		Amount:           *amount,
+		SenderAddress:    senderAddress,
+		RecipientAddress: recipientAddress,
+	}
+
+	tokenTransfer, err = service.tokenTransfers.GetByAllParams(ctx, tokenTransfer)
+	if err != nil {
+		service.log.Error("", Error.Wrap(err))
+		return status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
+	tokenTransfer.Status = transfers.StatusConfirming
+	tokenTransfer.TriggeringTx = transactionID
+	err = service.tokenTransfers.Update(ctx, tokenTransfer)
+	if err != nil {
+		service.log.Error("", Error.Wrap(err))
+		return status.Error(codes.Internal, Error.Wrap(err).Error())
 	}
 
 	return nil
@@ -572,29 +657,31 @@ func (service *Service) eventInReaction(ctx context.Context, eventFund chains.Ev
 
 // eventOutReaction performs actions after fundOut event.
 func (service *Service) eventOutReaction(ctx context.Context, eventFund chains.EventVariant, networkName networks.Name) error {
-	senderNetworkID := networks.NetworkNameToID[networks.Name(eventFund.EventFundsOut.From.NetworkName)]
+	senderNetworkID, ok := networks.NetworkNameToID[networks.Name(eventFund.EventFundsOut.From.NetworkName)]
+	if !ok {
+		service.log.Error("", Error.New("network name is invalid"))
+		return status.Error(codes.Internal, Error.New("network name is invalid").Error())
+	}
+
 	senderAddress, err := networks.StringToBytes(senderNetworkID, eventFund.EventFundsOut.From.Address)
 	if err != nil {
 		service.log.Error("", Error.Wrap(err))
 		return status.Error(codes.Internal, err.Error())
 	}
 
-	networkID := networks.NetworkNameToID[networkName]
-	address, err := networks.StringToBytes(networkID, eventFund.EventFundsOut.From.Address)
+	recipientNetworkID := networks.NetworkNameToID[networkName]
+	err = service.transactions.Exists(ctx, senderNetworkID, eventFund.EventFundsOut.Tx.Hash)
 	if err != nil {
-		service.log.Error("", Error.Wrap(err))
-		return status.Error(codes.Internal, Error.Wrap(err).Error())
-	}
-
-	err = service.transactions.Exists(ctx, networkID, eventFund.EventFundsOut.Tx.Hash)
-	if errors.Is(err, ErrTransactionAlreadyExists) {
-		return nil
+		if errors.Is(err, ErrTransactionAlreadyExists) {
+			return nil
+		}
+		return Error.Wrap(err)
 	}
 
 	transactionID, err := service.transactions.Create(ctx, transactions.Transaction{
-		NetworkID:   networkID,
+		NetworkID:   senderNetworkID,
 		TxHash:      eventFund.EventFundsOut.Tx.Hash,
-		Sender:      address,
+		Sender:      senderAddress,
 		BlockNumber: int64(eventFund.EventFundsOut.Tx.BlockNumber),
 		SeenAt:      time.Now().UTC(),
 	})
@@ -609,11 +696,17 @@ func (service *Service) eventOutReaction(ctx context.Context, eventFund chains.E
 		return status.Error(codes.Internal, "could not set amount")
 	}
 
+	recipient, err := networks.StringToBytes(recipientNetworkID, hex.EncodeToString(eventFund.EventFundsOut.To))
+	if err != nil {
+		service.log.Error("", Error.Wrap(err))
+		return status.Error(codes.Internal, Error.Wrap(err).Error())
+	}
+
 	tokenTransfer := transfers.TokenTransfer{
 		TokenID:          1, // todo: dynamically change.
 		Amount:           *amount,
 		SenderAddress:    senderAddress,
-		RecipientAddress: eventFund.EventFundsOut.To,
+		RecipientAddress: recipient,
 	}
 
 	tokenTransfer, err = service.tokenTransfers.GetByAllParams(ctx, tokenTransfer)

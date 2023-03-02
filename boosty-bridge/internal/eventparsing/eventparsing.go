@@ -21,6 +21,8 @@ const (
 	LengthSelectorAddress LengthSelector = 64
 	// LengthSelectorU256 defines that length of uint256 selector is 2.
 	LengthSelectorU256 LengthSelector = 2
+	// LengthSelectorU128 defines that length of uint128 selector is 2.
+	LengthSelectorU128 LengthSelector = 2
 	// LengthSelectorTag defines that length of tag selector is 2.
 	LengthSelectorTag LengthSelector = 2
 	// LengthSelectorAddressInBytes defines that length of address in bytes selector is 1.
@@ -150,6 +152,98 @@ func (e *EventData) GetAmount() (int, error) {
 	amount := big.NewInt(0).SetBytes(amountBytes)
 
 	return int(amount.Int64()), err
+}
+
+// GetGasCommission returns gas commission from event data.
+func (e *EventData) GetGasCommission() (int, error) {
+	gasCommissionLengthHex := e.getNextParam(0, LengthSelectorU256.Int())
+
+	gasCommissionLengthBytes, err := hex.DecodeString(gasCommissionLengthHex)
+	if err != nil {
+		return 0, err
+	}
+
+	gasCommissionLength := big.NewInt(0).SetBytes(gasCommissionLengthBytes)
+
+	gasCommissionHex := e.getNextParam(0, int(gasCommissionLength.Int64())*SymbolsInByte)
+	gasCommissionBytes, err := hex.DecodeString(gasCommissionHex)
+	if err != nil {
+		return 0, err
+	}
+
+	gasCommissionBytes = reverse.Bytes(gasCommissionBytes)
+	gasCommission := big.NewInt(0).SetBytes(gasCommissionBytes)
+
+	return int(gasCommission.Int64()), err
+}
+
+// GetStableCommissionPercent returns stable commission percent from event data.
+func (e *EventData) GetStableCommissionPercent() (int, error) {
+	stableCommissionPercentLengthHex := e.getNextParam(0, LengthSelectorU256.Int())
+
+	stableCommissionPercentLengthBytes, err := hex.DecodeString(stableCommissionPercentLengthHex)
+	if err != nil {
+		return 0, err
+	}
+
+	stableCommissionPercentLength := big.NewInt(0).SetBytes(stableCommissionPercentLengthBytes)
+
+	stableCommissionPercentHex := e.getNextParam(0, int(stableCommissionPercentLength.Int64())*SymbolsInByte)
+	stableCommissionPercentBytes, err := hex.DecodeString(stableCommissionPercentHex)
+	if err != nil {
+		return 0, err
+	}
+
+	stableCommissionPercentBytes = reverse.Bytes(stableCommissionPercentBytes)
+	stableCommissionPercent := big.NewInt(0).SetBytes(stableCommissionPercentBytes)
+
+	return int(stableCommissionPercent.Int64()), err
+}
+
+// GetNonce returns nonce from event data.
+func (e *EventData) GetNonce() (int, error) {
+	nonceLengthHex := e.getNextParam(0, LengthSelectorU128.Int())
+
+	nonceLengthBytes, err := hex.DecodeString(nonceLengthHex)
+	if err != nil {
+		return 0, err
+	}
+
+	nonceLength := big.NewInt(0).SetBytes(nonceLengthBytes)
+
+	nonceHex := e.getNextParam(0, int(nonceLength.Int64())*SymbolsInByte)
+	nonceBytes, err := hex.DecodeString(nonceHex)
+	if err != nil {
+		return 0, err
+	}
+
+	nonceBytes = reverse.Bytes(nonceBytes)
+	nonce := big.NewInt(0).SetBytes(nonceBytes)
+
+	return int(nonce.Int64()), err
+}
+
+// GetTransactionID returns transaction id from event data.
+func (e *EventData) GetTransactionID() (int, error) {
+	transactionIDLengthHex := e.getNextParam(0, LengthSelectorU256.Int())
+
+	transactionIDLengthBytes, err := hex.DecodeString(transactionIDLengthHex)
+	if err != nil {
+		return 0, err
+	}
+
+	transactionIDLength := big.NewInt(0).SetBytes(transactionIDLengthBytes)
+
+	transactionIDHex := e.getNextParam(0, int(transactionIDLength.Int64())*SymbolsInByte)
+	transactionIDBytes, err := hex.DecodeString(transactionIDHex)
+	if err != nil {
+		return 0, err
+	}
+
+	transactionIDBytes = reverse.Bytes(transactionIDBytes)
+	transactionID := big.NewInt(0).SetBytes(transactionIDBytes)
+
+	return int(transactionID.Int64()), err
 }
 
 // GetUserWalletAddress returns user wallet address from event data.

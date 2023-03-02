@@ -21,7 +21,7 @@ import (
 func TestClient(t *testing.T) {
 	ctx := context.Background()
 
-	expectedSignature := "1311fd12637b428ec0bd0a26099169e3136adb553d38dc42500eeaed19105df014b3f1d25fbb3299e3cc5ff122097c0cb7fd362ff49b5c70c7571a86bfd8704e1b"
+	expectedSignature := "648a0aeead8f01567483f201eab348a739f767f75e90fd4ff5079d2f527067975187d5adef2dd030f21558c065b5a11a2b8b8372015196843746c375ad4f8f261c"
 
 	privateKey := "ecff8b9c717a56b30f35a75db85342a1b42fcfe8540a733c73cc9ef38a165a56" // 0x7e0f5A592322Bc973DDE62dF3f91604D21d37446.
 	privateKeyECDSA, err := crypto.HexToECDSA(privateKey)
@@ -61,21 +61,21 @@ func TestClient(t *testing.T) {
 
 	var signature []byte
 	t.Run("get signature for bridgeIn", func(t *testing.T) {
-		amount, ok := big.NewInt(0).SetString("1", 10)
+		amount, ok := big.NewInt(0).SetString("1000000000000000000000", 10)
 		require.True(t, ok)
 
-		gasCommission, ok := big.NewInt(0).SetString("1", 10)
+		gasCommission, ok := big.NewInt(0).SetString("100000000000000000000", 10)
 		require.True(t, ok)
 
 		sig, err := transfer.GetBridgeInSignature(ctx, evm.GetBridgeInSignatureRequest{
-			User:               signerAddress,
-			Token:              common.HexToAddress("0x9fF6D0788066982c95D26F4A74d6C700F3Dc29ec"),
+			User:               common.HexToAddress("0x70997970C51812dc3A010C7d01b50e0d17dc79C8"),
+			Token:              common.HexToAddress("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"),
 			Amount:             amount,
 			GasCommission:      gasCommission,
 			DestinationChain:   "Solana",
 			DestinationAddress: "4zXwdbUDWo1S5AP2CEfv4zAPRds5PQUG1dyqLLvib2xu",
-			Deadline:           big.NewInt(1732924800), // big.NewInt(time.Date(2025, 0, 0, 0, 0, 0, 0, time.UTC).Unix()).
-			Nonce:              big.NewInt(0),          // increase after a successful transaction.
+			Deadline:           big.NewInt(1677754455),
+			Nonce:              big.NewInt(1), // increase after a successful transaction.
 		})
 		require.NoError(t, err)
 		require.NotEmpty(t, sig)

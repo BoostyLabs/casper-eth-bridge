@@ -44,13 +44,15 @@ func (tokenTransfersDB *tokenTransfersDB) Get(ctx context.Context, id int64) (tr
 	var (
 		tokenTransfer transfers.TokenTransfer
 		amount        []byte
+		outboundTx    sql.NullInt64
+		triggeringTx  sql.NullInt64
 	)
 
 	query := `SELECT id,triggering_tx,outbound_tx,token_id,amount,status,sender_network_id,sender_address,recipient_network_id,recipient_address 
 	FROM token_transfers WHERE id = $1`
 	row := tokenTransfersDB.conn.QueryRowContext(ctx, query, id)
 
-	if err := row.Scan(&tokenTransfer.ID, &tokenTransfer.TriggeringTx, &tokenTransfer.OutboundTx, &tokenTransfer.TokenID, &amount,
+	if err := row.Scan(&tokenTransfer.ID, &triggeringTx, &outboundTx, &tokenTransfer.TokenID, &amount,
 		&tokenTransfer.Status, &tokenTransfer.SenderNetworkID, &tokenTransfer.SenderAddress, &tokenTransfer.RecipientNetworkID,
 		&tokenTransfer.RecipientAddress); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -61,6 +63,12 @@ func (tokenTransfersDB *tokenTransfersDB) Get(ctx context.Context, id int64) (tr
 	}
 
 	tokenTransfer.Amount.SetBytes(amount)
+	if triggeringTx.Valid {
+		tokenTransfer.TriggeringTx = transactions.ID(triggeringTx.Int64)
+	}
+	if outboundTx.Valid {
+		tokenTransfer.OutboundTx = transactions.ID(outboundTx.Int64)
+	}
 
 	return tokenTransfer, nil
 }
@@ -70,16 +78,18 @@ func (tokenTransfersDB *tokenTransfersDB) GetByAllParams(ctx context.Context, pa
 	var (
 		tokenTransfer transfers.TokenTransfer
 		outboundTx    sql.NullInt64
+		triggeringTx  sql.NullInt64
 		amount        []byte
 	)
 
 	query := `SELECT id,triggering_tx,outbound_tx,token_id,amount,status,sender_network_id,sender_address,recipient_network_id,recipient_address
 	          FROM token_transfers
-	          WHERE token_id = $1 AND amount=$2 AND sender_address = $3 AND recipient_address = $4`
+	          WHERE token_id = $1 AND amount=$2 AND sender_address = $3 AND recipient_address = $4
+			  ORDER BY id DESC`
 
 	row := tokenTransfersDB.conn.QueryRowContext(ctx, query, params.TokenID, params.Amount.Bytes(), params.SenderAddress, params.RecipientAddress)
 
-	if err := row.Scan(&tokenTransfer.ID, &tokenTransfer.TriggeringTx, &outboundTx, &tokenTransfer.TokenID, &amount,
+	if err := row.Scan(&tokenTransfer.ID, &triggeringTx, &outboundTx, &tokenTransfer.TokenID, &amount,
 		&tokenTransfer.Status, &tokenTransfer.SenderNetworkID, &tokenTransfer.SenderAddress, &tokenTransfer.RecipientNetworkID,
 		&tokenTransfer.RecipientAddress); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -89,8 +99,13 @@ func (tokenTransfersDB *tokenTransfersDB) GetByAllParams(ctx context.Context, pa
 		return tokenTransfer, ErrTokenTransfers.Wrap(err)
 	}
 
-	tokenTransfer.OutboundTx = transactions.ID(outboundTx.Int64)
 	tokenTransfer.Amount.SetBytes(amount)
+	if triggeringTx.Valid {
+		tokenTransfer.TriggeringTx = transactions.ID(triggeringTx.Int64)
+	}
+	if outboundTx.Valid {
+		tokenTransfer.OutboundTx = transactions.ID(outboundTx.Int64)
+	}
 
 	return tokenTransfer, nil
 }
@@ -100,6 +115,7 @@ func (tokenTransfersDB *tokenTransfersDB) GetByNetworkAndTx(ctx context.Context,
 	var (
 		tokenTransfer transfers.TokenTransfer
 		outboundTx    sql.NullInt64
+		triggeringTx  sql.NullInt64
 		amount        []byte
 	)
 
@@ -110,7 +126,7 @@ func (tokenTransfersDB *tokenTransfersDB) GetByNetworkAndTx(ctx context.Context,
         WHERE txt.network_id = $1 AND txt.tx_hash = $2`
 	row := tokenTransfersDB.conn.QueryRowContext(ctx, query, networkID, txHash)
 
-	if err := row.Scan(&tokenTransfer.ID, &tokenTransfer.TriggeringTx, &outboundTx, &tokenTransfer.TokenID, &amount,
+	if err := row.Scan(&tokenTransfer.ID, &triggeringTx, &outboundTx, &tokenTransfer.TokenID, &amount,
 		&tokenTransfer.Status, &tokenTransfer.SenderNetworkID, &tokenTransfer.SenderAddress, &tokenTransfer.RecipientNetworkID,
 		&tokenTransfer.RecipientAddress); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -120,7 +136,12 @@ func (tokenTransfersDB *tokenTransfersDB) GetByNetworkAndTx(ctx context.Context,
 		return tokenTransfer, ErrTokenTransfers.Wrap(err)
 	}
 
-	tokenTransfer.OutboundTx = transactions.ID(outboundTx.Int64)
+	if triggeringTx.Valid {
+		tokenTransfer.TriggeringTx = transactions.ID(triggeringTx.Int64)
+	}
+	if outboundTx.Valid {
+		tokenTransfer.OutboundTx = transactions.ID(outboundTx.Int64)
+	}
 	tokenTransfer.Amount.SetBytes(amount)
 
 	return tokenTransfer, nil
@@ -151,15 +172,21 @@ func (tokenTransfersDB *tokenTransfersDB) ListByUser(ctx context.Context, offset
 		var (
 			tokenTransfer transfers.TokenTransfer
 			outboundTx    sql.NullInt64
+			triggeringTx  sql.NullInt64
 			amount        []byte
 		)
-		if err := rows.Scan(&tokenTransfer.ID, &tokenTransfer.TriggeringTx, &outboundTx, &tokenTransfer.TokenID, &amount,
+		if err := rows.Scan(&tokenTransfer.ID, &triggeringTx, &outboundTx, &tokenTransfer.TokenID, &amount,
 			&tokenTransfer.Status, &tokenTransfer.SenderNetworkID, &tokenTransfer.SenderAddress, &tokenTransfer.RecipientNetworkID,
 			&tokenTransfer.RecipientAddress); err != nil {
 			return tokenTransfers, Error.Wrap(err)
 		}
 
-		tokenTransfer.OutboundTx = transactions.ID(outboundTx.Int64)
+		if triggeringTx.Valid {
+			tokenTransfer.TriggeringTx = transactions.ID(triggeringTx.Int64)
+		}
+		if outboundTx.Valid {
+			tokenTransfer.OutboundTx = transactions.ID(outboundTx.Int64)
+		}
 		tokenTransfer.Amount.SetBytes(amount)
 
 		tokenTransfers = append(tokenTransfers, tokenTransfer)

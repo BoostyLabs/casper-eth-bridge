@@ -187,8 +187,8 @@ func (connectorRPC *connectorRPC) BridgeInSignature(ctx context.Context, req bri
 func (connectorRPC *connectorRPC) CancelSignature(ctx context.Context, req chains.CancelSignatureRequest) (chains.CancelSignatureResponse, error) {
 	signature, err := connectorRPC.client.CancelSignature(ctx, &pb_transfers.CancelSignatureRequest{
 		Nonce:      req.Nonce.Uint64(),
-		Token:      req.Token.Bytes(),
-		Recipient:  req.Recipient.Bytes(),
+		Token:      req.Token,
+		Recipient:  req.Recipient,
 		Commission: req.Commission.String(),
 		Amount:     req.Amount.String(),
 	})

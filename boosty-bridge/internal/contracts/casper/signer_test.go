@@ -16,13 +16,14 @@ import (
 
 var (
 	expectedBridgeInSignature    = "704a998ecd23af18ea1e6b61139975982fd8cedb5625eac9451b47b4658e48df24441537f57102d9f050448de5279d0ee7e4e24cac5e5deaa9c3eeeecbb1fb82"
-	expectedTransferOutSignature = "613cec1ab8d753f495f7e512659f4156655ce2a216fc2c67f003530a5b0d18362212fb1fff7ee6a35c54ff8bf3c865a12bab6e872138c424bf5134105fb39618"
+	expectedTransferOutSignature = "fd28308472fc1f642e68b79ed359756a5dcc8ac606d8970575f679d0ba97c84e7324a1f345d6a6e9606f3778ff198b3f59e57fe84323ac868761c9845e905715"
 
 	privateKeySecp256k1 = "cc903a2179a5c47acef21d732c0693848c6c33e626fd6651b3773732bde6e127"
 
 	bridgeInTokenPackageHash    = "c62925cefa47af5eb44a2c46de1055315b9371e3b34c47cb4ec6e30d5ab18ef6"
 	transferOutTokenPackageHash = "f7d8a923e6de29974a313945d5feedf9b43732ccad5e635d43a4b8b239e6a16f"
 	bridgeHash                  = "23e2dafc78abbb9a5159aef578eafd1794774838ddae2cfc8ed5165ee67b471d"
+	transferOutBridgeHash       = "88eab77ceef12c96de37adbc7f07705a096f78ec1789ce0b95357dfa475d7603"
 
 	accountAddress   = "5e681784dab76326249cf0d5f413806c366bbe4ed04508349a2e4b162fdcea5a"
 	recipientAddress = "e94daaff79c2ab8d9c31d9c3058d7d0a0dd31204a5638dc1451fa67b2e3fb88c"
@@ -79,6 +80,9 @@ func TestCasper_GetTransferOutSignature(t *testing.T) {
 	})
 
 	t.Run("get transferOut signature", func(t *testing.T) {
+		bridgeHashChainBytes, err := hex.DecodeString(transferOutBridgeHash)
+		require.NoError(t, err)
+
 		tokenPackageHashChainBytes, err := hex.DecodeString(transferOutTokenPackageHash)
 		require.NoError(t, err)
 
@@ -89,7 +93,8 @@ func TestCasper_GetTransferOutSignature(t *testing.T) {
 		require.NoError(t, err)
 
 		sig, err := signer.GetTransferOutSignature(ctx, casper_chain.TransferOutSignature{
-			Prefix:           "BBCSP/TR_OUT",
+			Prefix:           "TRICORN_TRANSFER_OUT",
+			BridgeHash:       bridgeHashChainBytes,
 			TokenPackageHash: tokenPackageHashChainBytes,
 			AccountAddress:   accountAddressBytes,
 			Recipient:        recipientBytes,
